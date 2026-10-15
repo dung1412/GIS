@@ -2,21 +2,21 @@
 
 Hosting `15.235.180.82` không hỗ trợ Docker. Ứng dụng cần **Python 3.12 + Uvicorn chạy thường trực**, nginx của Plesk chuyển tiếp đến `127.0.0.1:8000`. Chỉ bật Python/Passenger trong Plesk không đủ: Passenger Python thông thường dùng WSGI, còn FastAPI dùng ASGI. Không cần PostGIS.
 
-Ảnh Plesk cho thấy đã có `dung1412.online` đang chạy WordPress, cùng các website khác. Đề xuất dùng **`gis.dung1412.online`** cho WebGIS, giữ nguyên các website hiện có. Đây là hostname đề xuất, **chưa xác nhận đã tạo, trỏ DNS hoặc chạy ứng dụng**.
+Người dùng xác nhận **`dung1412.online` đã hết hạn**. Website còn xuất hiện trong Plesk không xác nhận domain còn hạn. Chưa chọn địa chỉ WebGIS; `gis.dung1412.online` chỉ dùng được sau khi gia hạn và kiểm tra DNS. Giữ nguyên các website hiện có.
 
 Giao diện đang thấy quản lý website/subscription; liên kết **SSH Keys** không chứng minh shell đã bật, quyền root hay quyền chạy dịch vụ Python thường trực. **Các lệnh quản trị dưới đây dành cho nhà cung cấp hosting**, không giả định người dùng chạy được chúng. Ảnh không xác nhận hệ điều hành hoặc loại gói hosting.
 
-## Bước có thể làm ngay trong Plesk
+## Chọn địa chỉ trước khi tạo website trong Plesk
 
-1. Vào **Websites & Domains → Add Subdomain**.
-2. Nhập **`gis`**, chọn domain **`dung1412.online`**. Dùng document root riêng do Plesk tạo cho subdomain, không dùng `httpdocs` hay thư mục WordPress hiện có.
-3. Lưu để tạo website riêng. Chưa upload ZIP/dữ liệu riêng vào document root; nhà cung cấp vẫn cần cài backend và proxy/HTTPS theo các phần dưới.
+1. Chọn domain khác còn hạn thuộc quyền quản lý, tên miền tạm do hosting cấp nếu hỗ trợ, hoặc gia hạn `dung1412.online`. Không suy ra các domain khác trong ảnh còn hạn hoặc được phép sử dụng. Tạo subdomain trong Plesk không gia hạn domain.
+2. Sau khi xác nhận địa chỉ hợp lệ, tạo website riêng. Nếu dùng subdomain, vào **Websites & Domains → Add Subdomain**, nhập tên và chọn domain tương ứng. Nếu đã gia hạn domain cũ, có thể nhập `gis` và chọn `dung1412.online`. Dùng document root riêng do Plesk tạo, giữ nguyên thư mục các website hiện có.
+3. Nhà cung cấp vẫn cần cài backend và proxy/HTTPS theo các phần dưới. Chưa upload ZIP/dữ liệu riêng vào document root.
 
-Xác định DNS có thẩm quyền của `dung1412.online`, rồi thêm bản ghi **`gis` loại `A` → `15.235.180.82`** nếu nhà cung cấp xác nhận đây là máy chủ chạy WebGIS. DNS Settings của Plesk chỉ có hiệu lực nếu nameserver đang dùng phục vụ zone đó; nếu DNS đang ở nhà đăng ký/dịch vụ ngoài Plesk, thêm bản ghi tại đó. Không thay bản ghi domain gốc hoặc website khác. Subdomain chưa được coi là online trước khi DNS, backend, proxy và TLS cùng được kiểm tra.
+Với domain tự quản lý, xác định DNS có thẩm quyền rồi thêm bản ghi **`A` cho hostname đã chọn → `15.235.180.82`** nếu nhà cung cấp xác nhận đây là máy chủ chạy WebGIS. DNS Settings của Plesk chỉ có hiệu lực nếu nameserver đang dùng phục vụ zone đó; nếu DNS đang ở nhà đăng ký/dịch vụ ngoài Plesk, thêm bản ghi tại đó. Với tên miền tạm, làm theo hướng dẫn DNS/HTTPS của hosting. Không thay bản ghi website khác. Địa chỉ chưa được coi là online trước khi DNS, backend, proxy và TLS cùng được kiểm tra.
 
 ## Gửi yêu cầu cho nhà cung cấp
 
-> Tôi muốn chạy WebGIS Phú Tài tại subdomain `gis.dung1412.online` trên hosting Plesk IP `15.235.180.82`, không dùng Docker. Domain `dung1412.online` đang chạy WordPress, xin giữ nguyên website đó và các website khác. Xin xác nhận gói hosting cho phép dịch vụ Python 3.12/Uvicorn thường trực, rồi cài theo https://github.com/dung1412/GIS/blob/main/docs/DEPLOY_NO_DOCKER.md và unit `deploy/phutai-webgis.service`. Cần tài khoản hệ thống riêng, mã nguồn/dữ liệu ngoài document root, backend chỉ nghe localhost, nginx của subdomain riêng và HTTPS. Tôi hiện thao tác qua giao diện quản lý website Plesk; chưa có kết nối SSH/root cho việc triển khai. Xin hỗ trợ tạo/kiểm tra subdomain, bản ghi DNS tại nơi có thẩm quyền, cấu hình backend/proxy và chứng chỉ. Vui lòng báo URL thực tế và kết quả kiểm tra sau khi cài.
+> Tôi muốn chạy WebGIS Phú Tài trên hosting Plesk IP `15.235.180.82`, không dùng Docker. Domain `dung1412.online` đã hết hạn; xin cho biết có tên miền tạm hỗ trợ HTTPS để dùng hay không. Nếu không có, tôi cần chọn domain khác còn hạn hoặc gia hạn domain cũ trước khi chốt hostname. Xin giữ nguyên các website hiện có, xác nhận gói hosting cho phép dịch vụ Python 3.12/Uvicorn thường trực, rồi cài theo https://github.com/dung1412/GIS/blob/main/docs/DEPLOY_NO_DOCKER.md và unit `deploy/phutai-webgis.service`. Cần tài khoản hệ thống riêng, mã nguồn/dữ liệu ngoài document root, backend chỉ nghe localhost, nginx của website riêng và HTTPS. Tôi hiện thao tác qua giao diện quản lý website Plesk; chưa có kết nối SSH/root cho việc triển khai. Xin hỗ trợ kiểm tra địa chỉ, DNS tại nơi có thẩm quyền, backend/proxy và chứng chỉ. Vui lòng báo URL thực tế và kết quả kiểm tra sau khi cài.
 
 Nếu nhà cung cấp không cho chạy dịch vụ Python thường trực, gói hosting này chưa đáp ứng backend. Cần gói khác cho phép ASGI; File Manager và GitHub Pages không thay thế khả năng này. Không gửi mật khẩu, khóa SSH hay API key trong chat.
 
@@ -99,7 +99,7 @@ Health phải trả `status: "ok"`; API dữ liệu chưa đăng nhập phải t
 
 ## 4. Tạo website Plesk, proxy và HTTPS
 
-Dùng website riêng cho hostname đề xuất **`gis.dung1412.online`**. Nếu chưa tạo theo bước đầu, người có quyền tương ứng dùng **Add Subdomain**, nhập `gis`, chọn `dung1412.online` và document root riêng. Xác nhận bản ghi `gis` tại DNS có thẩm quyền trỏ đúng máy chủ. Không đổi document root/vhost của WordPress `dung1412.online` hay website khác. Repository không tự tạo subdomain trong Plesk hoặc thay DNS; chỉ báo URL sau khi backend, DNS, proxy và TLS đã kiểm tra thành công.
+Dùng website riêng cho địa chỉ hợp lệ đã chọn ở bước đầu. Nếu dùng subdomain, người có quyền tương ứng dùng **Add Subdomain**, chọn domain còn hạn và document root riêng. Chỉ dùng `gis.dung1412.online` nếu domain cũ đã được gia hạn và DNS đã kiểm tra. Xác nhận DNS của hostname trỏ đúng máy chủ; với tên miền tạm, nhà cung cấp xác nhận cách gắn hostname và cấp chứng chỉ. Không đổi document root/vhost của website khác. Repository không tự tạo subdomain, gia hạn domain hoặc thay DNS; chỉ báo URL sau khi backend, DNS, proxy và TLS đã kiểm tra thành công.
 
 Ở website WebGIS → **Apache & nginx Settings → Additional nginx directives**, nhà cung cấp áp dụng proxy dưới đây sau khi kiểm tra các quy tắc sẵn có; không sửa trực tiếp file cấu hình Plesk tự sinh:
 

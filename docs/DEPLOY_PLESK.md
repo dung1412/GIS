@@ -4,7 +4,7 @@ Hosting hiện tại **không hỗ trợ Docker**. Dùng [DEPLOY_NO_DOCKER.md](D
 
 Phần còn lại của tài liệu này là phương án thay thế **chỉ dành cho máy chủ có Docker**. Container phục vụ cả API FastAPI và giao diện MapLibre. Dữ liệu dùng SQLite và các tệp GIS trong `data/`; không cần PostGIS để chạy các chức năng hiện có. GitHub Pages không chạy được API Python.
 
-IP người dùng cung cấp: `15.235.180.82`. Ảnh Plesk hiển thị domain `dung1412.online` đang chạy WordPress; đề xuất dùng subdomain riêng `gis.dung1412.online`, **chưa xác nhận đã tạo hoặc trỏ DNS**. Giao diện website/subscription và liên kết SSH Keys không chứng minh quyền root, shell hay chạy dịch vụ thường trực. Tài liệu này chuẩn bị các bước triển khai, **không xác nhận đã cài đặt ứng dụng trên VPS**. Không gửi mật khẩu/private key/API key trong chat; cấp quyền qua kênh quản lý truy cập an toàn của máy chủ.
+IP người dùng cung cấp: `15.235.180.82`. Người dùng xác nhận **`dung1412.online` đã hết hạn** dù website vẫn xuất hiện trong Plesk; `gis.dung1412.online` chỉ có thể dùng sau khi gia hạn và kiểm tra DNS. Chưa chọn địa chỉ thay thế. Giao diện website/subscription và liên kết SSH Keys không chứng minh quyền root, shell hay chạy dịch vụ thường trực. Tài liệu này chuẩn bị các bước triển khai, **không xác nhận đã cài đặt ứng dụng trên VPS**. Không gửi mật khẩu/private key/API key trong chat; cấp quyền qua kênh quản lý truy cập an toàn của máy chủ.
 
 ## Phương án Docker: dùng giao diện Plesk khi máy chủ hỗ trợ
 
@@ -19,9 +19,9 @@ Các phần có lệnh shell dưới đây dành cho nhà cung cấp hoặc khi 
 
 ## 1. Chọn địa chỉ website
 
-Đã có `dung1412.online` trong tài khoản Plesk; không cần mua domain mới để dùng subdomain. Vào **Websites & Domains → Add Subdomain**, nhập **`gis`**, chọn **`dung1412.online`**, dùng document root riêng do Plesk tạo, không chọn thư mục `httpdocs` của WordPress. Địa chỉ đề xuất là `gis.dung1412.online`; bước này mới tạo website, chưa triển khai API.
+Cần chọn một domain khác còn hạn thuộc quyền quản lý, tên miền tạm do hosting cấp nếu hỗ trợ, hoặc gia hạn `dung1412.online`. Không suy ra các domain khác trong ảnh còn hạn hoặc được phép sử dụng. Chỉ sau khi địa chỉ hợp lệ được xác nhận mới tạo website riêng trong Plesk. Nếu dùng subdomain, vào **Websites & Domains → Add Subdomain**, nhập tên và chọn domain còn hạn tương ứng; dùng document root riêng, giữ nguyên các website khác. Nếu gia hạn thành công domain cũ, có thể chọn `gis.dung1412.online` theo cách này. Tạo website chưa triển khai API.
 
-Xác định nơi đang quản lý DNS có thẩm quyền của `dung1412.online`. Tại đó tạo bản ghi `gis` loại `A` trỏ `15.235.180.82` nếu máy chủ này được nhà cung cấp xác nhận là nơi chạy WebGIS. DNS Settings trong Plesk chỉ có tác dụng nếu nameserver đang dùng phục vụ zone đó; nếu DNS ở nhà đăng ký hoặc dịch vụ khác, cập nhật ở dịch vụ tương ứng. Không đổi bản ghi của domain gốc hoặc website khác. Chỉ coi địa chỉ hoạt động sau khi kiểm tra DNS, proxy và TLS thành công.
+Với domain tự quản lý, xác định DNS có thẩm quyền rồi tạo bản ghi `A` cho hostname đã chọn trỏ `15.235.180.82` nếu máy chủ này được nhà cung cấp xác nhận là nơi chạy WebGIS. DNS Settings trong Plesk chỉ có tác dụng nếu nameserver đang dùng phục vụ zone đó; nếu DNS ở nhà đăng ký hoặc dịch vụ khác, cập nhật ở dịch vụ tương ứng. Tên miền tạm cần làm theo hướng dẫn DNS/HTTPS của hosting. Không đổi bản ghi của website khác. Chỉ coi địa chỉ hoạt động sau khi kiểm tra DNS, backend, proxy và TLS thành công.
 
 IP chỉ dùng kiểm tra kết nối ban đầu. Plesk có thể đang phục vụ website mặc định tại IP này; không thay cấu hình website khác để lấy địa chỉ đó. Không có domain nào được đăng ký hay tạo tự động bởi repository.
 

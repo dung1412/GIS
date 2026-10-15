@@ -28,7 +28,7 @@ Server phục vụ giao diện tại `/` và API tại `/api/`. `/api/health` c�
 
 ## Đưa lên Plesk
 
-Máy chủ người dùng cung cấp: **15.235.180.82**, Plesk; hosting **không hỗ trợ Docker**. Ảnh Plesk cho thấy đã có `dung1412.online` đang chạy WordPress. Đề xuất tạo subdomain **`gis.dung1412.online`**: vào **Websites & Domains → Add Subdomain**, nhập `gis`, chọn `dung1412.online`, dùng document root riêng để giữ nguyên WordPress. Đây là địa chỉ đề xuất, chưa xác nhận đã tạo hoặc trỏ DNS.
+Máy chủ người dùng cung cấp: **15.235.180.82**, Plesk; hosting **không hỗ trợ Docker**. Người dùng xác nhận **`dung1412.online` đã hết hạn**. Không dùng `gis.dung1412.online` cho triển khai cho đến khi domain được gia hạn và DNS được kiểm tra. Cần chọn một domain khác còn hạn thuộc quyền quản lý, tên miền tạm do hosting cấp nếu có, hoặc gia hạn domain cũ. Website xuất hiện trong Plesk không xác nhận domain còn hạn; địa chỉ WebGIS hiện chưa được chốt.
 
 Giao diện quản lý website/subscription và liên kết SSH Keys không chứng minh có quyền root, shell hay chạy dịch vụ Python thường trực. Cách triển khai phù hợp vẫn là nhờ nhà cung cấp chạy Python 3.12/Uvicorn bằng systemd và cấu hình nginx/HTTPS cho subdomain. Xem [hướng dẫn không dùng Docker và mẫu yêu cầu nhà cung cấp](docs/DEPLOY_NO_DOCKER.md). Chưa có kết nối quản trị máy chủ từ môi trường này; mã nguồn và hướng dẫn không xác nhận website đã online.
 
@@ -36,7 +36,7 @@ Backend chỉ nghe trên `127.0.0.1:8000`, Plesk/nginx phục vụ giao diện v
 
 GitHub lưu nguồn có thể công khai. **GitHub Pages không chạy được backend Python**, nên cấu hình Pages của bản mẫu đã được thay bằng CI Python và cấu hình container. URL Pages cũ không phải nơi chạy đầy đủ hệ thống Phú Tài.
 
-GPS/camera và sử dụng thực tế cần HTTPS với hostname/chứng chỉ phù hợp trên Plesk. Sau khi tạo subdomain, đặt bản ghi `gis` loại `A` về `15.235.180.82` tại nơi đang quản lý DNS có thẩm quyền của `dung1412.online`; nếu DNS ở dịch vụ ngoài Plesk, cập nhật ở đó. Không đổi bản ghi của website WordPress. Chỉ báo URL sử dụng sau khi kiểm tra DNS, backend, proxy và TLS thành công.
+GPS/camera và sử dụng thực tế cần HTTPS với hostname/chứng chỉ phù hợp trên Plesk. Sau khi chọn địa chỉ hợp lệ, tạo website/subdomain với document root riêng. Với domain tự quản lý, tạo bản ghi `A` cho hostname đã chọn về `15.235.180.82` tại DNS có thẩm quyền nếu đây là máy chủ được nhà cung cấp xác nhận chạy WebGIS; với tên miền tạm, làm theo hướng dẫn của hosting. Giữ nguyên các website khác. Chỉ báo URL sử dụng sau khi kiểm tra DNS, backend, proxy và TLS thành công.
 
 ## Dữ liệu riêng
 

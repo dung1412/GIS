@@ -1,4 +1,4 @@
-> Tài liệu tham khảo đi kèm gói nguồn. Cấu hình hiện hành xem README.md và DEPLOY_PLESK.md.
+> Tài liệu tham khảo đi kèm gói nguồn. Cấu hình hiện hành xem [README](../README.md) và [hướng dẫn Plesk không Docker](DEPLOY_NO_DOCKER.md); [phương án Docker](DEPLOY_PLESK.md) chỉ dành cho máy chủ hỗ trợ.
 
 # TÀI LIỆU BÀN GIAO KỸ THUẬT & HƯỚNG DẪN DỰ ÁN CHO AI CODEX
 **Dự án**: Hệ Thống WebGIS Quản Lý Lâm Nghiệp, Rừng Trồng & So Khớp Sổ Đỏ (Phú Tài Bioenergy)
