@@ -99,7 +99,7 @@ Health phải trả `status: "ok"`; API dữ liệu chưa đăng nhập phải t
 
 ## 4. Tạo website Plesk, proxy và HTTPS
 
-Dùng website riêng **`gis.dung1412.online`** đã tạo theo bước đầu; nếu chưa tạo, người có quyền tương ứng dùng **Add Subdomain**, nhập `gis`, chọn `dung1412.online` và document root riêng. Xác nhận bản ghi `gis` tại DNS có thẩm quyền trỏ đúng máy chủ. Không đổi document root/vhost của WordPress `dung1412.online` hay website khác. Repository không tự tạo subdomain trong Plesk hoặc thay DNS; chỉ báo URL sau khi backend, DNS, proxy và TLS đã kiểm tra thành công.
+Dùng website riêng cho hostname đề xuất **`gis.dung1412.online`**. Nếu chưa tạo theo bước đầu, người có quyền tương ứng dùng **Add Subdomain**, nhập `gis`, chọn `dung1412.online` và document root riêng. Xác nhận bản ghi `gis` tại DNS có thẩm quyền trỏ đúng máy chủ. Không đổi document root/vhost của WordPress `dung1412.online` hay website khác. Repository không tự tạo subdomain trong Plesk hoặc thay DNS; chỉ báo URL sau khi backend, DNS, proxy và TLS đã kiểm tra thành công.
 
 Ở website WebGIS → **Apache & nginx Settings → Additional nginx directives**, nhà cung cấp áp dụng proxy dưới đây sau khi kiểm tra các quy tắc sẵn có; không sửa trực tiếp file cấu hình Plesk tự sinh:
 
