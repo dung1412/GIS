@@ -10,7 +10,8 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test tests/geojson.test.js",
-    "test:smoke": "node scripts/smoke.mjs"
+    "test:smoke": "node scripts/smoke.mjs",
+    "test:production": "npm run build && node scripts/smoke.mjs --production"
   },
   "dependencies": { "leaflet": "1.9.4" },
   "devDependencies": { "playwright": "1.64.1", "vite": "8.3.4" }

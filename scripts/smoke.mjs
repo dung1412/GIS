@@ -5,7 +5,11 @@ import { chromium } from 'playwright';
 
 const port = 4175;
 const origin = `http://127.0.0.1:${port}`;
-const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', String(port), '--strictPort'], { stdio: ['ignore', 'pipe', 'pipe'] });
+const production = process.argv.includes('--production');
+const basePath = production ? '/GIS/' : '/';
+const appUrl = `${origin}${basePath}`;
+const serverArgs = ['node_modules/vite/bin/vite.js', ...(production ? ['preview', '--base', basePath] : []), '--host', '127.0.0.1', '--port', String(port), '--strictPort'];
+const server = spawn(process.execPath, serverArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
 let output = '';
 server.stdout.on('data', (chunk) => { output += chunk; });
 server.stderr.on('data', (chunk) => { output += chunk; });
@@ -18,7 +22,7 @@ try {
   for (let attempt = 0; attempt < 100; attempt++) {
     if (server.exitCode !== null) throw new Error(`Vite stopped: ${output}`);
     try {
-      const response = await fetch(origin);
+      const response = await fetch(appUrl);
       ready = response.ok && (await response.text()).includes('GIS · Không gian bản đồ');
     } catch { /* Wait for this server to listen. */ }
     if (ready) break;
@@ -29,8 +33,15 @@ try {
   browser = await chromium.launch({ executablePath, headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
   const page = await browser.newPage({ viewport: { width: 1366, height: 900 } });
   const pageErrors = [];
+  const assetFailures = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
-  await page.goto(origin);
+  page.on('response', (response) => {
+    if (response.url().startsWith(origin) && response.status() >= 400) assetFailures.push(`${response.status()} ${response.url()}`);
+  });
+  page.on('requestfailed', (request) => {
+    if (request.url().startsWith(origin)) assetFailures.push(request.url());
+  });
+  await page.goto(appUrl);
   await page.waitForFunction(() => document.querySelectorAll('.feature-card').length === 5);
   assert.equal(await page.locator('.leaflet-overlay-pane path').count(), 5);
   pass('sample GeoJSON renders five interactive map features');
@@ -92,8 +103,9 @@ try {
   const mapBox = await page.locator('#map').boundingBox();
   assert.ok(mapBox.width > 300 && mapBox.height >= 400);
   assert.deepEqual(pageErrors, []);
+  assert.deepEqual(assetFailures, []);
   pass('mobile layout fits the viewport with no uncaught browser errors');
-  console.log(`${passed} browser checks passed.`);
+  console.log(`${passed} browser checks passed (${production ? 'production /GIS/' : 'development'}).`);
 } finally {
   await browser?.close();
   server.kill('SIGTERM');

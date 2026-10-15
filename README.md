@@ -19,11 +19,22 @@ Vite lắng nghe trên `0.0.0.0`, mặc định cổng `5173`. Trên máy cá nh
 npm run build
 npm test
 npm run test:smoke
+npm run test:production
 ```
 
-`build` tạo ứng dụng tĩnh trong `dist/`. `test` kiểm tra chuẩn hóa GeoJSON, hình học, giới hạn và dữ liệu mẫu bằng Node.js. `test:smoke` chạy 8 kiểm tra ứng dụng trong Chromium bằng Playwright và tự khởi động/dừng máy chủ riêng ở cổng `4175`. Lệnh ưu tiên trình duyệt tại `/usr/bin/chromium`, có thể ghi đè bằng biến `CHROMIUM_PATH`. Trên máy khác chưa có Chromium, chạy `npx playwright install chromium` trước. Có thể xem bản build bằng `npm run preview`.
+`build` tạo ứng dụng tĩnh trong `dist/`. `test` kiểm tra chuẩn hóa GeoJSON, hình học, giới hạn và dữ liệu mẫu bằng Node.js. `test:smoke` chạy 8 kiểm tra ứng dụng trong Chromium bằng Playwright và tự khởi động/dừng máy chủ riêng ở cổng `4175`. Sau khi build, `test:production` kiểm tra bản build khi phục vụ dưới đường dẫn `/GIS/` như trên GitHub Pages. Các lệnh kiểm tra trình duyệt ưu tiên Chromium tại `/usr/bin/chromium`, có thể ghi đè bằng biến `CHROMIUM_PATH`. Trên máy khác chưa có Chromium, chạy `npx playwright install chromium` trước. Có thể xem bản build bằng `npm run preview`.
 
 Nếu npm không thể ghi cache mặc định trong môi trường đám mây, dùng `npm --cache /workspace/.cache/npm ci` thay cho `npm ci`. Không cần chỉnh sửa lockfile.
+
+## Đưa web lên Internet bằng GitHub Pages
+
+Mã nguồn được quản lý tại [dung1412/GIS](https://github.com/dung1412/GIS). Workflow [`deploy-pages.yml`](.github/workflows/deploy-pages.yml) cài đặt bằng `npm ci`, chạy `npm test`, build và đưa nội dung `dist/` lên GitHub Pages khi có thay đổi trên nhánh `main`.
+
+Để bật lần đầu, tài khoản có quyền quản lý repository mở [Settings → Pages](https://github.com/dung1412/GIS/settings/pages), chọn **Source → GitHub Actions**. Sau đó mở [Actions → Deploy GIS to GitHub Pages](https://github.com/dung1412/GIS/actions/workflows/deploy-pages.yml), chọn **Run workflow** trên nhánh `main` nếu chưa có lần chạy mới. Các lần đẩy mã nguồn tiếp theo sẽ tự triển khai. Không cần thêm token hoặc API key vào mã nguồn.
+
+Địa chỉ mặc định sau khi triển khai thành công là **https://dung1412.github.io/GIS/**. Có thể dùng địa chỉ miễn phí này để mở trên máy tính hoặc điện thoại; chỉ xem lần triển khai thành công và URL trong job `deploy` là xác nhận trang đã hoạt động. Nếu bước **Configure GitHub Pages** báo chưa tìm thấy site, kiểm tra lại lựa chọn **Source** trong Settings → Pages rồi chạy lại workflow.
+
+Nếu muốn dùng tên miền riêng như `gis.tenmien.vn`, cần có quyền quản lý DNS của tên miền đó. Thêm bản ghi `CNAME` cho `gis` trỏ đến `dung1412.github.io` (không có `/GIS/`), khai báo tên miền trong **Settings → Pages → Custom domain**, rồi bật **Enforce HTTPS** khi chứng chỉ sẵn sàng. Xem [hướng dẫn tên miền của GitHub](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site) cho cấu hình tên miền gốc. Không cần mua tên miền để dùng địa chỉ GitHub Pages ở trên.
 
 ## Sử dụng dữ liệu
 
