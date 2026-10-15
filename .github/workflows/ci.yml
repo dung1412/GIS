@@ -1,6 +1,8 @@
 name: Python and deployment checks
 
 on:
+  push:
+    branches: [main]
   pull_request:
   workflow_call:
 
@@ -30,7 +32,3 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_*.py'
       - name: Verify native Linux service syntax
         run: python scripts/verify_service.py
-      - name: Validate production Compose configuration
-        run: |
-          cp .env.example .env
-          docker compose config --quiet

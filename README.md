@@ -28,13 +28,15 @@ Server phục vụ giao diện tại `/` và API tại `/api/`. `/api/health` c�
 
 ## Đưa lên Plesk
 
-Máy chủ người dùng cung cấp: **15.235.180.82**, Plesk, chưa có tên miền; hosting **không hỗ trợ Docker** và người dùng chỉ có quyền quản trị Plesk. Cách triển khai phù hợp là nhờ nhà cung cấp chạy Python 3.12/Uvicorn dưới dịch vụ systemd và cấu hình nginx của Plesk. Xem [hướng dẫn không dùng Docker và mẫu yêu cầu nhà cung cấp](docs/DEPLOY_NO_DOCKER.md). Chưa có kết nối quản trị máy chủ từ môi trường này; mã nguồn và hướng dẫn không xác nhận website đã online.
+Máy chủ người dùng cung cấp: **15.235.180.82**, Plesk; hosting **không hỗ trợ Docker**. Ảnh Plesk cho thấy đã có `dung1412.online` đang chạy WordPress. Đề xuất tạo subdomain **`gis.dung1412.online`**: vào **Websites & Domains → Add Subdomain**, nhập `gis`, chọn `dung1412.online`, dùng document root riêng để giữ nguyên WordPress. Đây là địa chỉ đề xuất, chưa xác nhận đã tạo hoặc trỏ DNS.
+
+Giao diện quản lý website/subscription và liên kết SSH Keys không chứng minh có quyền root, shell hay chạy dịch vụ Python thường trực. Cách triển khai phù hợp vẫn là nhờ nhà cung cấp chạy Python 3.12/Uvicorn bằng systemd và cấu hình nginx/HTTPS cho subdomain. Xem [hướng dẫn không dùng Docker và mẫu yêu cầu nhà cung cấp](docs/DEPLOY_NO_DOCKER.md). Chưa có kết nối quản trị máy chủ từ môi trường này; mã nguồn và hướng dẫn không xác nhận website đã online.
 
 Backend chỉ nghe trên `127.0.0.1:8000`, Plesk/nginx phục vụ giao diện và API qua HTTPS. Dữ liệu lưu trong `data/`, `scratch/` ngoài document root; luồng SQLite hiện tại không cần PostGIS. Mục Python/Passenger của Plesk dùng WSGI không trực tiếp chạy FastAPI ASGI. [Hướng dẫn Docker](docs/DEPLOY_PLESK.md) chỉ áp dụng cho máy chủ khác có hỗ trợ container.
 
 GitHub lưu nguồn có thể công khai. **GitHub Pages không chạy được backend Python**, nên cấu hình Pages của bản mẫu đã được thay bằng CI Python và cấu hình container. URL Pages cũ không phải nơi chạy đầy đủ hệ thống Phú Tài.
 
-Có thể dùng IP để kiểm tra ban đầu. GPS/camera và sử dụng thực tế cần HTTPS với hostname/chứng chỉ phù hợp trên Plesk. Chưa đăng ký hoặc xác nhận tên miền công khai nào.
+GPS/camera và sử dụng thực tế cần HTTPS với hostname/chứng chỉ phù hợp trên Plesk. Sau khi tạo subdomain, đặt bản ghi `gis` loại `A` về `15.235.180.82` tại nơi đang quản lý DNS có thẩm quyền của `dung1412.online`; nếu DNS ở dịch vụ ngoài Plesk, cập nhật ở đó. Không đổi bản ghi của website WordPress. Chỉ báo URL sử dụng sau khi kiểm tra DNS, backend, proxy và TLS thành công.
 
 ## Dữ liệu riêng
 

@@ -1,8 +1,6 @@
 name: Publish WebGIS container
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -28,6 +26,10 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Validate production Compose configuration
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - name: Sign in to GitHub Container Registry
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3

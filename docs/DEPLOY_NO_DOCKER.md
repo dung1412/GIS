@@ -2,17 +2,27 @@
 
 Hosting `15.235.180.82` không hỗ trợ Docker. Ứng dụng cần **Python 3.12 + Uvicorn chạy thường trực**, nginx của Plesk chuyển tiếp đến `127.0.0.1:8000`. Chỉ bật Python/Passenger trong Plesk không đủ: Passenger Python thông thường dùng WSGI, còn FastAPI dùng ASGI. Không cần PostGIS.
 
-Người dùng hiện chỉ có quyền quản trị Plesk, chưa có SSH/root và chưa có tên miền. **Các lệnh quản trị dưới đây dành cho nhà cung cấp hosting**, không giả định người dùng chạy được chúng. Mã nguồn/cấu hình đã chuẩn bị không có nghĩa ứng dụng đã cài trên máy chủ.
+Ảnh Plesk cho thấy đã có `dung1412.online` đang chạy WordPress, cùng các website khác. Đề xuất dùng **`gis.dung1412.online`** cho WebGIS, giữ nguyên các website hiện có. Đây là hostname đề xuất, **chưa xác nhận đã tạo, trỏ DNS hoặc chạy ứng dụng**.
+
+Giao diện đang thấy quản lý website/subscription; liên kết **SSH Keys** không chứng minh shell đã bật, quyền root hay quyền chạy dịch vụ Python thường trực. **Các lệnh quản trị dưới đây dành cho nhà cung cấp hosting**, không giả định người dùng chạy được chúng. Ảnh không xác nhận hệ điều hành hoặc loại gói hosting.
+
+## Bước có thể làm ngay trong Plesk
+
+1. Vào **Websites & Domains → Add Subdomain**.
+2. Nhập **`gis`**, chọn domain **`dung1412.online`**. Dùng document root riêng do Plesk tạo cho subdomain, không dùng `httpdocs` hay thư mục WordPress hiện có.
+3. Lưu để tạo website riêng. Chưa upload ZIP/dữ liệu riêng vào document root; nhà cung cấp vẫn cần cài backend và proxy/HTTPS theo các phần dưới.
+
+Xác định DNS có thẩm quyền của `dung1412.online`, rồi thêm bản ghi **`gis` loại `A` → `15.235.180.82`** nếu nhà cung cấp xác nhận đây là máy chủ chạy WebGIS. DNS Settings của Plesk chỉ có hiệu lực nếu nameserver đang dùng phục vụ zone đó; nếu DNS đang ở nhà đăng ký/dịch vụ ngoài Plesk, thêm bản ghi tại đó. Không thay bản ghi domain gốc hoặc website khác. Subdomain chưa được coi là online trước khi DNS, backend, proxy và TLS cùng được kiểm tra.
 
 ## Gửi yêu cầu cho nhà cung cấp
 
-> Tôi cần triển khai WebGIS Phú Tài tại máy chủ Plesk 15.235.180.82, không dùng Docker. Xin xác nhận gói hosting cho phép dịch vụ Python 3.12/Uvicorn thường trực, sau đó cài theo https://github.com/dung1412/GIS/blob/main/docs/DEPLOY_NO_DOCKER.md và unit `deploy/phutai-webgis.service`. Cần tài khoản hệ thống riêng, mã nguồn/dữ liệu ngoài document root, backend chỉ nghe localhost, nginx của một website Plesk riêng và HTTPS. Tôi chỉ có quyền quản trị Plesk và chưa có tên miền; xin cung cấp hostname tạm có HTTPS nếu gói hỗ trợ hoặc hướng dẫn gắn tên miền riêng. Không thay đổi website khác đang chạy. Vui lòng báo URL thực tế và kết quả kiểm tra sau khi cài.
+> Tôi muốn chạy WebGIS Phú Tài tại subdomain `gis.dung1412.online` trên hosting Plesk IP `15.235.180.82`, không dùng Docker. Domain `dung1412.online` đang chạy WordPress, xin giữ nguyên website đó và các website khác. Xin xác nhận gói hosting cho phép dịch vụ Python 3.12/Uvicorn thường trực, rồi cài theo https://github.com/dung1412/GIS/blob/main/docs/DEPLOY_NO_DOCKER.md và unit `deploy/phutai-webgis.service`. Cần tài khoản hệ thống riêng, mã nguồn/dữ liệu ngoài document root, backend chỉ nghe localhost, nginx của subdomain riêng và HTTPS. Tôi hiện thao tác qua giao diện quản lý website Plesk; chưa có kết nối SSH/root cho việc triển khai. Xin hỗ trợ tạo/kiểm tra subdomain, bản ghi DNS tại nơi có thẩm quyền, cấu hình backend/proxy và chứng chỉ. Vui lòng báo URL thực tế và kết quả kiểm tra sau khi cài.
 
 Nếu nhà cung cấp không cho chạy dịch vụ Python thường trực, gói hosting này chưa đáp ứng backend. Cần gói khác cho phép ASGI; File Manager và GitHub Pages không thay thế khả năng này. Không gửi mật khẩu, khóa SSH hay API key trong chat.
 
 ## 1. Kiểm tra khả năng máy chủ
 
-Nhà cung cấp kiểm tra Linux/systemd, Python 3.12, dung lượng dữ liệu và cổng localhost `8000` chưa có dịch vụ khác. Tham chiếu ban đầu: 2 CPU, RAM 4 GB, đĩa trống 10 GB cộng dung lượng dữ liệu GIS. Các dependency đã kiểm tra trên Linux amd64/Python 3.12; với kiến trúc khác cần kiểm tra wheel tương ứng trước khi cài. Không thay Python hệ thống mà Plesk đang dùng.
+Nhà cung cấp kiểm tra Linux/systemd, Python 3.12, hạn mức CPU/RAM/dung lượng và cổng localhost `8000` chưa có dịch vụ khác. Trong môi trường đã kiểm tra, venv chiếm khoảng **796 MiB**, dữ liệu riêng khoảng **85 MiB**, frontend khoảng **31 MiB**; cần thêm chỗ cho cài đặt, lớp GIS mới và bản sao lưu. Ảnh Plesk hiển thị hạn mức **5 GB đã dùng khoảng 49%**; nhà cung cấp cần xác nhận dung lượng thực tế dành cho ứng dụng và quyền chạy dịch vụ. Các dependency đã kiểm tra trên Linux amd64/Python 3.12; với kiến trúc khác cần kiểm tra wheel tương ứng trước khi cài. Không thay Python hệ thống mà Plesk đang dùng.
 
 Backend dùng wheel GIS trong `requirements.lock`; OpenCV còn cần thư viện GL/GLib/GOMP của hệ điều hành. Chỉ chạy lệnh phù hợp với bản phân phối đã xác nhận, qua kho chính thức:
 
@@ -89,7 +99,7 @@ Health phải trả `status: "ok"`; API dữ liệu chưa đăng nhập phải t
 
 ## 4. Tạo website Plesk, proxy và HTTPS
 
-Nhà cung cấp/người có quyền tương ứng tạo **website riêng** trong Plesk. Dùng hostname tạm do nhà cung cấp cấp nếu có, hoặc tên miền do người dùng sở hữu với bản ghi `A` trỏ `15.235.180.82`. Không đổi website mặc định hay vhost của website khác để chiếm địa chỉ IP. Repository không tự đăng ký tên miền; chỉ báo URL sau khi DNS, proxy và TLS đã kiểm tra thành công.
+Dùng website riêng **`gis.dung1412.online`** đã tạo theo bước đầu; nếu chưa tạo, người có quyền tương ứng dùng **Add Subdomain**, nhập `gis`, chọn `dung1412.online` và document root riêng. Xác nhận bản ghi `gis` tại DNS có thẩm quyền trỏ đúng máy chủ. Không đổi document root/vhost của WordPress `dung1412.online` hay website khác. Repository không tự tạo subdomain trong Plesk hoặc thay DNS; chỉ báo URL sau khi backend, DNS, proxy và TLS đã kiểm tra thành công.
 
 Ở website WebGIS → **Apache & nginx Settings → Additional nginx directives**, nhà cung cấp áp dụng proxy dưới đây sau khi kiểm tra các quy tắc sẵn có; không sửa trực tiếp file cấu hình Plesk tự sinh:
 
