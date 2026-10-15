@@ -1,7 +1,26 @@
-node_modules/
-dist/
+# Local configuration and credentials
 .env
 .env.*
 !.env.example
+.agents/
+
+# Python and browser tooling
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+dist/
 *.log
 test-results/
+
+# Operational forestry/land records and account databases stay private.
+/data/*
+!/data/README.md
+!/data/provinces_boundaries.geojson
+!/data/provinces_boundaries_lines.geojson
+!/data/fonts/
+/frontend/data/layers/
+/frontend/assets/screenshot_*.png
+/scratch/
+/uploads/

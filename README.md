@@ -1,55 +1,56 @@
-# GIS Workspace
+# Phú Tài Bioenergy — WebGIS miền Trung
 
-Ứng dụng GIS chạy trong trình duyệt, dùng Leaflet để xem và quản lý một bộ dữ liệu GeoJSON nhỏ. Giao diện tiếng Việt có danh sách đối tượng, tìm kiếm không phân biệt dấu, bộ lọc điểm/đường/vùng, xem chi tiết trên bản đồ, thêm điểm bằng chuột, nhập và xuất GeoJSON.
+Nguồn **WebGIS Phú Tài** được nhập từ `WebGIS_PhuTai_CentralVietnam_Package.zip` do người dùng cung cấp, thay thế bản GIS mẫu trước đó. Ứng dụng dùng FastAPI/Python, MapLibre và SQLite cho dữ liệu rừng Quảng Ngãi, Bình Định, Phú Yên. Xem [nguồn nhập và các điều chỉnh](docs/SOURCE_IMPORT.md).
 
-Dữ liệu mẫu mô tả một số địa điểm tại TP. Hồ Chí Minh. Các tuyến và ranh giới chỉ để minh họa giao diện, không phải dữ liệu địa chính chính thức và không dùng để dẫn đường.
+Giữ giao diện, logo và các module của gói: bản đồ, tra cứu lô/chủ rừng, nhập GIS, công cụ VN-2000, so khớp hình thể, OCR, hồ sơ sổ đỏ và bản đồ cá nhân. Tích hợp vệ tinh/AI bên ngoài cần cấu hình và kết nối tương ứng; việc chạy server không xác nhận mọi dịch vụ ngoài đã hoạt động.
 
-## Chạy trên máy hoặc môi trường đám mây
+## Chạy bằng Python
 
-Cần Node.js **22.12 trở lên** và npm. Dùng Node.js phiên bản LTS tương thích khi có thể.
-
-```sh
-npm ci
-npm run dev
-```
-
-Vite lắng nghe trên `0.0.0.0`, mặc định cổng `5173`. Trên máy cá nhân, mở địa chỉ được Vite hiển thị. Trong phiên thiết lập môi trường đám mây này, ứng dụng được kiểm tra bằng yêu cầu nội bộ; giao diện onboarding không cung cấp bản xem trước web. Nếu cổng đang được dùng, xem số cổng thực tế trong đầu ra của lệnh.
+Dùng **Python 3.12**. `requirements.lock` ghi phiên bản đã kiểm tra; `requirements.txt` giữ danh sách yêu cầu của gói gốc.
 
 ```sh
-npm run build
-npm test
-npm run test:smoke
-npm run test:production
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.lock
 ```
 
-`build` tạo ứng dụng tĩnh trong `dist/`. `test` kiểm tra chuẩn hóa GeoJSON, hình học, giới hạn và dữ liệu mẫu bằng Node.js. `test:smoke` chạy 8 kiểm tra ứng dụng trong Chromium bằng Playwright và tự khởi động/dừng máy chủ riêng ở cổng `4175`. Sau khi build, `test:production` kiểm tra bản build khi phục vụ dưới đường dẫn `/GIS/` như trên GitHub Pages. Các lệnh kiểm tra trình duyệt ưu tiên Chromium tại `/usr/bin/chromium`, có thể ghi đè bằng biến `CHROMIUM_PATH`. Trên máy khác chưa có Chromium, chạy `npx playwright install chromium` trước. Có thể xem bản build bằng `npm run preview`.
+Nếu chưa có `.env`, sao chép `.env.example` thành `.env`. Giữ nguyên file có sẵn; không commit giá trị bí mật.
 
-Nếu npm không thể ghi cache mặc định trong môi trường đám mây, dùng `npm --cache /workspace/.cache/npm ci` thay cho `npm ci`. Không cần chỉnh sửa lockfile.
+```sh
+.venv/bin/python -m backend.admin_cli
+.venv/bin/python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000
+```
 
-## Đưa web lên Internet bằng GitHub Pages
+Lệnh tạo admin hỏi mật khẩu bằng nhập ẩn. Không tạo tài khoản demo mặc định. Giữ `WEBGIS_REQUIRE_AUTH=1`, `WEBGIS_ALLOW_REGISTRATION=0`, `WEBGIS_ENABLE_DEMO_ACCOUNTS=0` như `.env.example` khi host dữ liệu riêng. Bản triển khai mới cần cơ sở dữ liệu tài khoản mới; không chuyển cơ sở dữ liệu/phiên đăng nhập cũ từ gói tải lên.
 
-Mã nguồn được quản lý tại [dung1412/GIS](https://github.com/dung1412/GIS). Workflow [`deploy-pages.yml`](.github/workflows/deploy-pages.yml) cài đặt bằng `npm ci`, chạy `npm test`, build và đưa nội dung `dist/` lên GitHub Pages khi có thay đổi trên nhánh `main`.
+Trong máy cloud hiện tại, dùng `python3` có sẵn để tạo venv; nếu cache mặc định không ghi được, thêm `--cache-dir /workspace/.cache/pip` vào lệnh pip.
 
-Để bật lần đầu, tài khoản có quyền quản lý repository mở [Settings → Pages](https://github.com/dung1412/GIS/settings/pages), chọn **Source → GitHub Actions**. Sau đó mở [Actions → Deploy GIS to GitHub Pages](https://github.com/dung1412/GIS/actions/workflows/deploy-pages.yml), chọn **Run workflow** trên nhánh `main` nếu chưa có lần chạy mới. Các lần đẩy mã nguồn tiếp theo sẽ tự triển khai. Không cần thêm token hoặc API key vào mã nguồn.
+Server phục vụ giao diện tại `/` và API tại `/api/`. `/api/health` cần trả `status: "ok"`. Onboarding không cung cấp web preview; kiểm tra tại đây bằng yêu cầu nội bộ và Chromium.
 
-Địa chỉ mặc định sau khi triển khai thành công là **https://dung1412.github.io/GIS/**. Có thể dùng địa chỉ miễn phí này để mở trên máy tính hoặc điện thoại; chỉ xem lần triển khai thành công và URL trong job `deploy` là xác nhận trang đã hoạt động. Nếu bước **Configure GitHub Pages** báo chưa tìm thấy site, kiểm tra lại lựa chọn **Source** trong Settings → Pages rồi chạy lại workflow.
+## Đưa lên Plesk
 
-Nếu muốn dùng tên miền riêng như `gis.tenmien.vn`, cần có quyền quản lý DNS của tên miền đó. Thêm bản ghi `CNAME` cho `gis` trỏ đến `dung1412.github.io` (không có `/GIS/`), khai báo tên miền trong **Settings → Pages → Custom domain**, rồi bật **Enforce HTTPS** khi chứng chỉ sẵn sàng. Xem [hướng dẫn tên miền của GitHub](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site) cho cấu hình tên miền gốc. Không cần mua tên miền để dùng địa chỉ GitHub Pages ở trên.
+Máy chủ người dùng cung cấp: **15.235.180.82**, Plesk, chưa có tên miền; hiện chỉ xác nhận quyền quản trị Plesk, chưa có kết nối quản trị máy chủ từ môi trường này. Xem [DEPLOY_PLESK.md](docs/DEPLOY_PLESK.md).
 
-## Sử dụng dữ liệu
+Docker chạy một FastAPI và giữ `data/`, `scratch/` qua volume. Plesk/nginx chuyển tiếp đến cổng nội bộ `127.0.0.1:8000`. Luồng SQLite hiện tại không cần PostGIS.
 
-- **Nhập GeoJSON** thay thế toàn bộ dữ liệu hiện tại sau khi tệp được kiểm tra thành công. Xuất bản sao trước khi nhập hoặc khôi phục dữ liệu mẫu nếu muốn giữ thay đổi.
-- Nhận một `Feature` hoặc `FeatureCollection`, tối đa **5 MB** và **10.000 đối tượng**. Bộ dữ liệu rỗng được chấp nhận.
-- Hỗ trợ `Point`, `MultiPoint`, `LineString`, `MultiLineString`, `Polygon`, `MultiPolygon`. Các kiểu khác, bao gồm `GeometryCollection` và hình học `null`, chưa được hỗ trợ.
-- Tọa độ dùng **WGS84** theo thứ tự **[kinh độ, vĩ độ]**, có thể thêm độ cao ở phần tử thứ ba. Kinh độ trong khoảng ±180, vĩ độ trong khoảng ±90; mọi giá trị phải hữu hạn. Các vòng của đa giác cần khép kín.
-- Thuộc tính `name` dùng làm tên hiển thị; `description` và `category` bổ sung phần mô tả và danh mục. Các thuộc tính JSON khác vẫn được giữ khi xuất. Chưa có công cụ vẽ đường, vẽ vùng hay chỉnh sửa thuộc tính.
-- Nút **Thêm điểm** cho phép chọn một vị trí trên bản đồ. Nhấn Escape để hủy thao tác.
-- **Xuất GeoJSON** tải toàn bộ bộ dữ liệu xuống thành `gis-data.geojson`, kể cả các đối tượng đang ẩn bởi bộ lọc hoặc tìm kiếm.
+GitHub lưu nguồn có thể công khai. **GitHub Pages không chạy được backend Python**, nên cấu hình Pages của bản mẫu đã được thay bằng CI Python và cấu hình container. URL Pages cũ không phải nơi chạy đầy đủ hệ thống Phú Tài.
 
-Ứng dụng lưu thay đổi vào **localStorage của trình duyệt hiện tại**. Dữ liệu gắn với trình duyệt và địa chỉ trang; xóa dữ liệu trang, đổi địa chỉ/cổng hoặc dùng chế độ riêng tư có thể làm mất dữ liệu đã lưu. Hãy xuất GeoJSON để sao lưu và chuyển sang máy khác. Nếu trình duyệt từ chối lưu, ứng dụng báo lỗi và dữ liệu trong phiên vẫn có thể xuất.
+Có thể dùng IP để kiểm tra ban đầu. GPS/camera và sử dụng thực tế cần HTTPS với hostname/chứng chỉ phù hợp trên Plesk. Chưa đăng ký hoặc xác nhận tên miền công khai nào.
 
-## Kết nối và phạm vi
+## Dữ liệu riêng
 
-Không cần API key hay biến môi trường bí mật. Cài đặt phụ thuộc cần kết nối npm. Bản đồ nền lấy ảnh từ `https://tile.openstreetmap.org` và cần Internet; dữ liệu bản đồ nền thuộc OpenStreetMap contributors theo phần ghi nguồn trên bản đồ. Có thể tắt bản đồ nền và tiếp tục xem các đối tượng GeoJSON khi ảnh nền không tải được.
+Dữ liệu chủ rừng, CCCD, điện thoại, sổ đỏ, tài khoản, phiên đăng nhập và khóa dịch vụ trong gói được giữ riêng tại máy thiết lập. `.gitignore` và `.dockerignore` loại chúng khỏi Git/image công khai. Chỉ chuyển dữ liệu nghiệp vụ cần thiết qua kênh quản trị an toàn; không đưa `webgis.db` có tài khoản/phiên cũ vào bản triển khai mới.
 
-Đây là ứng dụng phía trình duyệt: chưa có backend, tài khoản, làm việc nhóm hoặc lưu dữ liệu trên máy chủ. Máy chủ Vite chỉ phục vụ phát triển; triển khai ứng dụng bằng nội dung tĩnh trong `dist/` sau khi build.
+Nguồn công khai có ranh giới tỉnh, phông, logo và thư viện MapLibre. Xem [data/README.md](data/README.md). Gói có một lớp đầy đủ 31.332 đối tượng; lớp `layer_f3f5750f` chỉ có chỉ mục, thiếu GeoJSON/SQLite/overview. MapInfo thiếu `.MAP` và `.DAT`, nên cần bổ sung để dùng trọn lớp đó. Không tạo dữ liệu giả thay thế.
+
+Các khóa Google/Planet/Gemini và thông tin Copernicus là tùy chọn, nhập trong `.env` riêng. Giá trị viết sẵn đã được bỏ. API công khai không trả khóa/phiên; đường dẫn tải trực tiếp cơ sở dữ liệu và hồ sơ riêng bị chặn.
+
+## Kiểm tra
+
+```sh
+.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
+.venv/bin/python scripts/check_runtime.py
+```
+
+Unit tests dùng HTTP/SQLite tạm để kiểm tra đăng nhập, quyền sửa chung, quyền workspace, tạo admin và chặn file riêng. Không chạy kiểm tra ghi/xóa lên dữ liệu thật. `check_runtime.py` kiểm tra server đang chạy; đặt `WEBGIS_URL` để đổi địa chỉ và `WEBGIS_TOKEN` qua môi trường riêng khi cần đăng nhập. Thêm `--with-data` khi đã nạp dữ liệu để bắt buộc tra cứu có đối tượng.
+
+Công cụ phát triển `tools/browser` dùng Chromium/Playwright để kiểm tra giao diện; Node không phải dependency của backend. Cài bằng `npm --prefix tools/browser ci`, rồi chạy `npm --prefix tools/browser test`. Ảnh nền/dịch vụ ngoài cần Internet, được ghi nhận riêng với kết quả API nội bộ.

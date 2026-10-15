@@ -1,0 +1,31 @@
+services:
+  webgis:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: phutai-webgis:local
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: production
+      PORT: "8000"
+      WEBGIS_REQUIRE_AUTH: "1"
+      WEBGIS_ENABLE_DEMO_ACCOUNTS: "0"
+      WEBGIS_ALLOW_REGISTRATION: "0"
+    # Only the local Plesk reverse proxy can reach the container directly.
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./scratch:/app/scratch
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

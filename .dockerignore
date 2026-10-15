@@ -1,0 +1,15 @@
+# Deny by default: never send sessions, databases, user layers or secrets to Docker.
+**
+!Dockerfile
+!requirements.lock
+!backend/**/*.py
+!frontend/index.html
+!frontend/css/**/*.css
+!frontend/js/**/*.js
+!frontend/assets/logo.png
+!frontend/assets/vendor/maplibre-gl.js
+!frontend/assets/vendor/maplibre-gl.css
+!frontend/data/quangngai_districts_bbox.json
+!data/provinces_boundaries.geojson
+!data/provinces_boundaries_lines.geojson
+!data/fonts/**/*.pbf

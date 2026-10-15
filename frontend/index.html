@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Phú Tài Bioenergy | Hệ Thống Web GIS Quản Lý Rừng & So Khớp Sổ Đỏ</title>
+    <meta name="description" content="Ứng dụng Web GIS Phú Tài Bioenergy phục vụ doanh nghiệp năng lượng sinh học viên nén gỗ: tra cứu chủ rừng, so khớp hình thể sổ đỏ thông minh và giám sát chứng chỉ FM/SBP/EUDR.">
+    
+    <!-- MapLibre GL JS (Local Fast Offline First) -->
+    <link href="assets/vendor/maplibre-gl.css" rel="stylesheet" />
+    <script src="assets/vendor/maplibre-gl.js"></script>
+    
+    <!-- App Styling -->
+    <link rel="stylesheet" href="css/app.css?v=20261013_responsive">
+</head>
+<body>
+
+    <!-- APP HEADER -->
+    <header class="app-header">
+        <div class="brand-section">
+            <img src="assets/logo.png?v=20260925_11" alt="Phú Tài Bioenergy" class="brand-logo-img">
+            <div class="brand-info">
+                <h1>PHÚ TÀI BIOENERGY</h1>
+                <p>Hệ Thống Web GIS Quản Lý Rừng - Phòng Bền vững</p>
+            </div>
+        </div>
+
+        <!-- Province Selector Pills (Compact & Responsive) -->
+        <div class="province-pills">
+            <button class="prov-btn active" data-province="ALL" title="Toàn cảnh 3 Tỉnh">
+                <span>🌐</span> <span class="prov-name-full">Toàn Cảnh</span><span class="prov-name-short">Tất Cả</span>
+            </button>
+            <button class="prov-btn" data-province="QNG" title="Quảng Ngãi">
+                <span class="prov-name-full">Quảng Ngãi</span><span class="prov-name-short">Q.Ngãi</span>
+            </button>
+            <button class="prov-btn" data-province="BDH" title="Bình Định">
+                <span class="prov-name-full">Bình Định</span><span class="prov-name-short">B.Định</span>
+            </button>
+            <button class="prov-btn" data-province="PYE" title="Phú Yên">
+                <span class="prov-name-full">Phú Yên</span><span class="prov-name-short">P.Yên</span>
+            </button>
+        </div>
+
+        <!-- Header Actions: Tinh gọn thành các Dropdown Menu thông minh -->
+        <div class="header-actions">
+            <!-- Dropdown 1: Dữ Liệu -->
+            <div class="header-dropdown-wrapper">
+                <button class="btn-header dropdown-trigger" id="btn-dd-data" onclick="window.toggleHeaderDropdown('menu-dd-data', event)" title="Quản lý dữ liệu bản đồ">
+                    <span>📁 Dữ Liệu</span>
+                    <span class="dd-caret">▼</span>
+                </button>
+                <div class="header-dropdown-menu" id="menu-dd-data">
+                    <button class="dropdown-item" id="btn-open-import-modal" title="Nhập bản đồ (SHP / MapInfo TAB / KML / MBTiles)">
+                        <span>📤</span> <span>Nhập Bản Đồ...</span>
+                    </button>
+                    <button class="dropdown-item" id="btn-open-export-raster-modal" title="Xuất ảnh vệ tinh nén ECW chuẩn VN-2000">
+                        <span>💾</span> <span>Xuất Ảnh Vệ Tinh (ECW)...</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dropdown 2: Công Cụ GIS -->
+            <div class="header-dropdown-wrapper">
+                <button class="btn-header dropdown-trigger" id="btn-dd-tools" onclick="window.toggleHeaderDropdown('menu-dd-tools', event)" title="Các công cụ GIS chuyên dụng">
+                    <span>🛠️ Công Cụ GIS</span>
+                    <span class="dd-caret">▼</span>
+                </button>
+                <div class="header-dropdown-menu" id="menu-dd-tools">
+                    <button class="dropdown-item" id="btn-open-attribute-table" title="Bảng tra cứu dữ liệu thuộc tính">
+                        <span>📋</span> <span>Bảng Thuộc Tính Lô Rừng</span>
+                    </button>
+                    <button class="dropdown-item" id="btn-open-coord-search-modal" title="Tìm đến tọa độ VN-2000 hoặc WGS84">
+                        <span>📍</span> <span>Tìm Tọa Độ (VN-2000 / GPS)</span>
+                    </button>
+                    <button class="dropdown-item" id="btn-open-font-converter-modal" title="Chuyển đổi font chữ TCVN3 (ABC/.VNTime) qua lại Unicode">
+                        <span>🔤</span> <span>Chuyển Mã Font (TCVN3 ⇄ Unicode)</span>
+                    </button>
+                    <button class="dropdown-item" id="btn-open-fractional-label-modal" title="Thiết lập hiển thị nhãn phân số theo lô rừng">
+                        <span>🏷️</span> <span>Cài Đặt Nhãn Phân Số Lô</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dropdown 3: Hiển Thị & Ranh Giới (Giải quyết trực tiếp yêu cầu không thấy ranh giới) -->
+            <div class="header-dropdown-wrapper">
+                <button class="btn-header dropdown-trigger" id="btn-dd-display" onclick="window.toggleHeaderDropdown('menu-dd-display', event)" title="Cài đặt hiển thị ranh giới & viền lô">
+                    <span>🗺️ Ranh Giới & Lớp</span>
+                    <span class="dd-caret">▼</span>
+                </button>
+                <div class="header-dropdown-menu" id="menu-dd-display">
+                    <button class="dropdown-item" id="btn-toggle-province-boundaries" title="Bật/Tắt hiển thị ranh giới hành chính 3 tỉnh">
+                        <span id="icon-prov-boundary">🏛️</span>
+                        <span>Ranh Giới Hành Chính: <b id="status-prov-boundary" style="color:#34d399;">BẬT</b></span>
+                    </button>
+                    <button class="dropdown-item" id="btn-toggle-plot-borders" title="Bật/Tắt viền trắng tương phản cao cho từng lô rừng">
+                        <span id="icon-plot-borders">🔲</span>
+                        <span>Viền Lô Tương Phản: <b id="status-plot-borders" style="color:#34d399;">BẬT</b></span>
+                    </button>
+                    <button class="dropdown-item" id="btn-toggle-cad-toolbar" title="Bật/Tắt thanh công cụ vẽ MapInfo CAD trên bản đồ">
+                        <span>✏️</span>
+                        <span>Thanh Công Cụ Vẽ (CAD): <b id="status-cad-toolbar" style="color:#94a3b8;">ẨN</b></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- APP CONTAINER -->
+    <main class="app-container">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="app-sidebar">
+            <!-- Floating Sidebar Toggle Tab (Thu gọn / Mở rộng bảng điều khiển) -->
+            <button class="sidebar-toggle-tab" id="btn-toggle-sidebar" title="Thu gọn / Mở rộng bảng điều khiển" onclick="window.toggleSidebar && window.toggleSidebar()">
+                <span class="toggle-icon" id="sidebar-toggle-icon">◀</span>
+            </button>
+            
+            <!-- Navigation Tabs (4 Chuyên Mục Chính) -->
+            <nav class="sidebar-tabs" style="grid-template-columns: repeat(4, 1fr);">
+                <button class="tab-btn active" data-tab="tab-owners" title="Chủ Rừng & Lô Rừng">
+                    <span class="tab-icon">🔍</span>
+                    <span>Lô Rừng</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-layers" title="Quản Lý Lớp Bản Đồ">
+                    <span class="tab-icon">🗂️</span>
+                    <span>Lớp Bản Đồ</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-shapematch" title="So Khớp Sổ Đỏ">
+                    <span class="tab-icon">📜</span>
+                    <span>So Khớp</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-redbook-log" title="Sổ Đỏ Đã Tìm & Ghi Chú">
+                    <span class="tab-icon">📑</span>
+                    <span>Sổ Đã Tìm</span>
+                </button>
+            </nav>
+
+            <!-- TAB 1: CHỦ RỪNG & TÌM KIẾM -->
+            <section class="tab-content active" id="tab-owners">
+                <!-- Collapsible Search & Statistics Group -->
+                <div class="collapsible-section" id="search-stats-section">
+                    <div class="search-container">
+                        <div class="search-input-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="forest-search-input" class="search-input" placeholder="Tìm theo tên chủ rừng, CCCD, mã lô, số sổ đỏ...">
+                        </div>
+                        <div class="filter-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                            <select id="filter-province" class="filter-select">
+                                <option value="">Tất cả tỉnh</option>
+                                <option value="Quảng Ngãi" selected>Quảng Ngãi</option>
+                                <option value="Bình Định">Bình Định</option>
+                                <option value="Phú Yên">Phú Yên</option>
+                            </select>
+                            <select id="filter-district" class="filter-select">
+                                <option value="">Tất cả Huyện/TX</option>
+                                <option value="Ba Tơ">Ba Tơ (62.907 lô)</option>
+                                <option value="Bình Sơn">Bình Sơn (36.783 lô)</option>
+                                <option value="Đức Phổ">Đức Phổ (11.937 lô)</option>
+                                <option value="Minh Long">Minh Long (24.260 lô)</option>
+                                <option value="Mộ Đức">Mộ Đức (8.611 lô)</option>
+                                <option value="Nghĩa Hành">Nghĩa Hành (6.770 lô)</option>
+                                <option value="Sơn Hà">Sơn Hà (69.541 lô)</option>
+                                <option value="Sơn Tây">Sơn Tây (27.805 lô)</option>
+                                <option value="Sơn Tịnh">Sơn Tịnh (7.211 lô)</option>
+                                <option value="Tây Trà">Tây Trà (22.943 lô)</option>
+                                <option value="TP Quảng Ngãi">TP Quảng Ngãi (2.547 lô)</option>
+                                <option value="Trà Bồng">Trà Bồng (16.012 lô)</option>
+                                <option value="Tư Nghĩa">Tư Nghĩa (10.506 lô)</option>
+                                <option value="Lý Sơn">Lý Sơn (424 lô)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Summary Bar -->
+                    <div class="stats-summary-grid">
+                        <div class="stat-card">
+                            <div class="stat-val" id="stat-total-area">-- ha</div>
+                            <div class="stat-lbl">Tổng Diện Tích</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="stat-total-plots">-- lô</div>
+                            <div class="stat-lbl">Lô Quản Lý</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="stat-total-layers" style="color: #38bdf8;">1</div>
+                            <div class="stat-lbl">Lớp Bản Đồ</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 12px; font-weight: 700; color: #cbd5e1;">DANH SÁCH LÔ RỪNG <span id="results-count" style="color: #38bdf8;"></span></span>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <button type="button" class="btn-toggle-subpanel" id="btn-toggle-search-stats" onclick="window.toggleSearchStats && window.toggleSearchStats()" title="Thu gọn / Mở rộng bộ lọc & thống kê">
+                            <span id="search-stats-toggle-icon">▲</span> <span id="search-stats-toggle-text">Thu gọn bộ lọc</span>
+                        </button>
+                        <button type="button" class="btn-toggle-subpanel" id="btn-collapse-sidebar-inner" onclick="window.toggleSidebar && window.toggleSidebar(true)" title="Ẩn bảng bên để xem bản đồ toàn cảnh" style="border-color: rgba(255, 255, 255, 0.2); color: #94a3b8;">
+                            <span>◀ Ẩn bảng</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Plot Cards List -->
+                <div id="plots-list-container">
+                    <!-- Dynamic plot cards rendered via JS -->
+                </div>
+            </section>
+
+            <!-- TAB 2: SO KHỚP HÌNH THỂ SỔ ĐỎ -->
+            <section class="tab-content" id="tab-shapematch">
+                <div class="shape-match-container">
+                    
+                    <div class="shape-box-title">
+                        <span>📐</span>
+                        <span>SO KHỚP HÌNH THỂ THỬA ĐẤT TỪ SỔ ĐỎ</span>
+                    </div>
+
+                    <p style="font-size: 11px; color: #94a3b8; line-height: 1.5; margin-bottom: 12px;">
+                        Quy trình xác minh đa cấp: <b>1. Chủ rừng</b> ➜ <b>2. Địa chỉ hành chính</b> ➜ <b>3. So khớp hình thể đường bao thửa đất</b> trên CSDL kiểm kê rừng.
+                    </p>
+
+                    <!-- STEP 1: CHỦ RỪNG -->
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label class="form-label" style="font-weight: 700; color: #34d399; display: flex; align-items: center; gap: 4px;">
+                            <span>👤</span> <span>1. TÌM CHỦ RỪNG (Người sử dụng đất):</span>
+                        </label>
+                        <input type="text" id="shape-filter-owner" class="search-input" placeholder="Ví dụ: Nguyễn A (hỗ trợ cả gõ Unicode & TCVN3)..." style="width: 100%; border-color: rgba(52, 211, 153, 0.4);">
+                    </div>
+
+                    <!-- STEP 2: ĐỊA CHỈ & THỬA ĐẤT -->
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label class="form-label" style="font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 4px;">
+                            <span>📍</span> <span>2. TÌM THEO ĐỊA CHỈ & THỬA ĐẤT:</span>
+                        </label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                            <select id="shape-filter-district" class="filter-select" style="font-size: 11px;">
+                                <option value="">Tất cả Huyện/TX</option>
+                                <option value="Bình Sơn">Bình Sơn</option>
+                                <option value="Ba Tơ">Ba Tơ</option>
+                                <option value="Đức Phổ">Đức Phổ</option>
+                                <option value="Minh Long">Minh Long</option>
+                                <option value="Mộ Đức">Mộ Đức</option>
+                                <option value="Nghĩa Hành">Nghĩa Hành</option>
+                                <option value="Sơn Hà">Sơn Hà</option>
+                                <option value="Sơn Tây">Sơn Tây</option>
+                                <option value="Sơn Tịnh">Sơn Tịnh</option>
+                                <option value="Tây Trà">Tây Trà</option>
+                                <option value="Trà Bồng">Trà Bồng</option>
+                                <option value="Tư Nghĩa">Tư Nghĩa</option>
+                                <option value="TP Quảng Ngãi">TP Quảng Ngãi</option>
+                                <option value="Lý Sơn">Lý Sơn</option>
+                            </select>
+                            <input type="text" id="shape-filter-commune" class="search-input" placeholder="Xã/Thôn (VD: Bình Châu)..." style="font-size: 11px;">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                            <input type="text" id="shape-filter-parcel" class="search-input" placeholder="Thửa số (161)..." style="font-size: 11px;">
+                            <input type="text" id="shape-filter-sheet" class="search-input" placeholder="Tờ BĐ (23)..." style="font-size: 11px;">
+                            <input type="number" id="shape-filter-area" class="search-input" placeholder="DT (ha) (0.13)..." step="0.01" style="font-size: 11px;">
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: HÌNH THỂ / ẢNH SỔ ĐỎ -->
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label class="form-label" style="font-weight: 700; color: #fbbf24; margin: 0; display: flex; align-items: center; gap: 4px;">
+                                <span>📐</span> <span>3. ẢNH CHỤP SƠ ĐỒ THỬA ĐẤT (TÙY CHỌN):</span>
+                            </label>
+                            <span id="btn-open-roi-crop" style="display: none; font-size: 11px; color: #38bdf8; cursor: pointer; text-decoration: underline;">
+                                ✂️ Khoanh lại vùng sơ đồ
+                            </span>
+                        </div>
+
+                        <!-- Upload Dropzone (Supports Multiple Images: Trang 2 & Trang 3) -->
+                        <div class="upload-dropzone" id="redbook-dropzone" style="padding: 14px 10px;">
+                            <div class="upload-icon" style="font-size: 24px;">📄</div>
+                            <div class="upload-text" style="font-size: 12px; font-weight: 700;">Kéo thả ảnh Sổ đỏ vào đây hoặc bấm để chọn</div>
+                            <div class="upload-hint" style="font-size: 10px; color: #94a3b8; margin-top: 3px;">
+                                💡 Cho phép chọn <b>1 hoặc nhiều ảnh</b> (ví dụ: Mặt 1 thông tin pháp lý & Mặt 2 sơ đồ thửa đất)
+                            </div>
+                            <input type="file" id="redbook-file-input" accept="image/*" multiple style="display: none;">
+                        </div>
+                        <div id="redbook-selected-files-list" style="margin-top: 6px; display: flex; flex-direction: column; gap: 4px;"></div>
+                    </div>
+
+                    <!-- Actions Row -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                        <button type="button" class="btn-primary" id="btn-trigger-match" style="flex: 2; padding: 9px 12px; font-weight: 800; font-size: 12px; background: linear-gradient(135deg, #0284c7, #0369a1); border: 1px solid #38bdf8; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);">
+                            🚀 TÌM KIẾM & SO KHỚP LÔ RỪNG
+                        </button>
+                        <button type="button" class="btn-header" id="btn-reset-match" style="flex: 1; padding: 9px; font-size: 12px; color: #94a3b8; border-color: rgba(255,255,255,0.15);" title="Xóa sạch bộ lọc để tìm lại">
+                            🔄 Xóa Lọc
+                        </button>
+                    </div>
+
+
+                    <!-- Contour Preview Area -->
+                    <div id="contour-preview-container"></div>
+
+                    <!-- Matching Status -->
+                    <div id="shape-match-status" style="display: none;"></div>
+
+                    <!-- Match Results List -->
+                    <div id="shape-match-results"></div>
+
+                    <!-- Coordinate Table Parser Section -->
+                    <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px; margin-top: 8px;">
+                        <div class="shape-box-title" style="margin-bottom: 8px;">
+                            <span>🔢</span>
+                            <span>BÓC TÁCH BẢNG TỌA ĐỘ GÓC RANH VN-2000</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Chọn Kinh Tuyến Trục Tỉnh:</label>
+                            <select id="coord-province-select" class="filter-select">
+                                <option value="Quảng Ngãi">Quảng Ngãi (KTT 108°00')</option>
+                                <option value="Bình Định">Bình Định (KTT 108°15')</option>
+                                <option value="Phú Yên">Phú Yên (KTT 108°30')</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-top: 8px;">
+                            <label class="form-label">Dán danh sách điểm tọa độ (X, Y):</label>
+                            <textarea id="coord-table-input" class="form-textarea" rows="4" placeholder="Ví dụ:&#10;1  1642100.5  582100.2&#10;2  1642250.0  582280.0&#10;3  1642180.2  582350.5&#10;4  1642050.8  582210.0"></textarea>
+                        </div>
+                        <button class="btn-primary" id="btn-parse-coords" style="width: 100%; margin-top: 8px;">
+                            Chuyển Đổi Sang WGS-84 & Tìm Lô Trùng Khớp
+                        </button>
+                        <div id="coord-parse-result"></div>
+                    </div>
+
+                </div>
+            </section>
+
+            </section>
+
+            <!-- TAB: QUẢN LÝ LỚP BẢN ĐỒ -->
+            <section class="tab-content" id="tab-layers">
+                <div style="padding: 10px 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div style="font-size: 13px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+                            <span>🗂️</span>
+                            <span>HỆ THỐNG CÁC LỚP BẢN ĐỒ</span>
+                        </div>
+                        <button class="btn-primary" id="btn-tab-add-layer" style="padding: 5px 10px; font-size: 11px;">
+                            + Nhập Bản Đồ
+                        </button>
+                    </div>
+                    <p style="font-size: 11px; color: #94a3b8; line-height: 1.5; margin-bottom: 14px;">
+                        Hỗ trợ nạp và quản lý đồng thời nhiều nguồn dữ liệu: <b>Kiểm kê rừng</b>, <b>Địa chính xã/huyện</b>, <b>Quy hoạch lâm nghiệp 3 loại rừng</b>. Dữ liệu được lưu vĩnh viễn trên máy chủ.
+                    </p>
+
+                    <!-- Layers List Container -->
+                    <div id="layers-list-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: SỔ ĐỎ ĐÃ TÌM & GHI CHÚ THỰC ĐỊA -->
+            <section class="tab-content" id="tab-redbook-log">
+                <div style="padding: 10px 0;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
+                        <div style="font-size: 13px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+                            <span>📑</span>
+                            <span>DANH MỤC SỔ ĐỎ ĐÃ TÌM & GHI CHÚ</span>
+                            <span id="redbook-count-badge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 12px;">0</span>
+                        </div>
+                        <button id="btn-clear-all-redbooks" class="btn-clear-redbooks" onclick="window.app.clearAllRedBookLogs()" title="Xóa toàn bộ lịch sử các sổ đỏ đã tìm kiếm">
+                            🗑️ Xóa Tất Cả
+                        </button>
+                    </div>
+                    <p style="font-size: 11px; color: #94a3b8; line-height: 1.5; margin-bottom: 12px;">
+                        Theo dõi lịch sử tra cứu sổ đỏ, tỷ lệ tương đồng hình thể với file SHP thực tế và cập nhật ghi chú xác minh ngoài thực địa.
+                    </p>
+
+                    <div class="search-container" style="padding: 0; margin-bottom: 12px;">
+                        <div class="search-input-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="redbook-search-input" class="search-input" placeholder="Tìm tên chủ đất, số thửa, số tờ, ghi chú...">
+                        </div>
+                        <div class="filter-row" style="margin-top: 8px;">
+                            <select id="filter-redbook-status" class="filter-select">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="Đã tìm thấy vị trí">Đã tìm thấy vị trí</option>
+                                <option value="Chưa tìm thấy vị trí">Chưa tìm thấy vị trí</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Red Book Logs Container -->
+                    <div id="redbook-logs-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+        </aside>
+
+        <!-- MAP VIEWPORT -->
+        <section class="map-viewport">
+            <div id="map"></div>
+
+            <!-- =========================================================================
+                 MAPINFO PROFESSIONAL DRAWING TOOLBAR (Thanh công cụ Vẽ MapInfo)
+                 ========================================================================= -->
+            <div class="mapinfo-toolbar-container collapsed" id="mapinfo-toolbar-container">
+                <!-- SVG Gradient Defs -->
+                <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="mi-poly-grad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#48bb78" />
+                            <stop offset="50%" stop-color="#2f855a" />
+                            <stop offset="100%" stop-color="#22543d" />
+                        </linearGradient>
+                        <radialGradient id="mi-pin-grad" cx="35%" cy="35%" r="65%">
+                            <stop offset="0%" stop-color="#67e8f9" />
+                            <stop offset="60%" stop-color="#06b6d4" />
+                            <stop offset="100%" stop-color="#0e7490" />
+                        </radialGradient>
+                        <linearGradient id="mi-text-grad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#7dd3fc" />
+                            <stop offset="50%" stop-color="#0284c7" />
+                            <stop offset="100%" stop-color="#0369a1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+
+                <div class="mapinfo-toolbar-bar" id="mapinfo-toolbar-bar">
+                    <!-- Grip handle on left -->
+                    <div class="mapinfo-grip" id="mapinfo-grip" title="Thanh công cụ Vẽ MapInfo (Bấm để thu gọn/mở rộng)">
+                        <svg width="6" height="22" viewBox="0 0 6 22">
+                            <circle cx="2" cy="3" r="1.1" fill="#64748b" />
+                            <circle cx="2" cy="7" r="1.1" fill="#64748b" />
+                            <circle cx="2" cy="11" r="1.1" fill="#64748b" />
+                            <circle cx="2" cy="15" r="1.1" fill="#64748b" />
+                            <circle cx="2" cy="19" r="1.1" fill="#64748b" />
+                            <circle cx="4" cy="5" r="1.1" fill="#ffffff" />
+                            <circle cx="4" cy="9" r="1.1" fill="#ffffff" />
+                            <circle cx="4" cy="13" r="1.1" fill="#ffffff" />
+                            <circle cx="4" cy="17" r="1.1" fill="#ffffff" />
+                        </svg>
+                    </div>
+
+                    <!-- 1. Point / Symbol -->
+                    <button class="mapinfo-tool-btn" data-tool="point" onclick="window.gisEditor && window.gisEditor.setMode('point')" title="Điểm / Ký hiệu (Symbol) - Đặt mốc ranh hoặc điểm tọa độ">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 14 L10 22 L13 16 Z" fill="#94a3b8" stroke="#475569" stroke-width="0.75"/>
+                            <ellipse cx="12" cy="13" rx="7" ry="2.2" fill="#0891b2" stroke="#0e7490" stroke-width="0.7"/>
+                            <path d="M9 12 C9 9 10 6 10 4.5 L14 4.5 C14 6 15 9 15 12 Z" fill="url(#mi-pin-grad)" stroke="#0e7490" stroke-width="0.7"/>
+                            <ellipse cx="12" cy="4.5" rx="5" ry="2.2" fill="#a5f3fc" stroke="#0891b2" stroke-width="0.7"/>
+                        </svg>
+                    </button>
+
+                    <!-- 2. Line -->
+                    <button class="mapinfo-tool-btn" data-tool="line" onclick="window.gisEditor && window.gisEditor.setMode('line')" title="Đoạn thẳng (Line) - Vẽ đường ranh 2 điểm">
+                        <svg viewBox="0 0 24 24">
+                            <line x1="4" y1="6" x2="20" y2="18" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round"/>
+                            <circle cx="4" cy="6" r="2" fill="#ffffff" stroke="#0369a1" stroke-width="1.2"/>
+                            <circle cx="20" cy="18" r="2" fill="#ffffff" stroke="#0369a1" stroke-width="1.2"/>
+                        </svg>
+                    </button>
+
+                    <!-- 3. Polyline -->
+                    <button class="mapinfo-tool-btn" data-tool="polyline" onclick="window.gisEditor && window.gisEditor.setMode('polyline')" title="Đường gấp khúc (Polyline) - Vẽ đường ranh nhiều đỉnh (nhấp đúp để xong)">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="4,18 13,18 19,6" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+                            <circle cx="4" cy="18" r="1.8" fill="#ffffff" stroke="#0369a1" stroke-width="1"/>
+                            <circle cx="13" cy="18" r="1.8" fill="#ffffff" stroke="#0369a1" stroke-width="1"/>
+                            <circle cx="19" cy="6" r="1.8" fill="#ffffff" stroke="#0369a1" stroke-width="1"/>
+                        </svg>
+                    </button>
+
+                    <!-- 4. Arc -->
+                    <button class="mapinfo-tool-btn" data-tool="arc" onclick="window.gisEditor && window.gisEditor.setMode('arc')" title="Cung tròn (Arc) - Vẽ đường cong cung tròn">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 19 A15 15 0 0 1 19 4" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+
+                    <!-- 5. Polygon -->
+                    <button class="mapinfo-tool-btn" data-tool="polygon" onclick="window.gisEditor && window.gisEditor.setMode('polygon')" title="Vùng đa giác (Polygon) - Vẽ lô rừng / thửa đất khép kín (nhấp đúp để xong)">
+                        <svg viewBox="0 0 24 24">
+                            <polygon points="12,3 21,10 18,20 6,20 3,10" fill="url(#mi-poly-grad)" stroke="#064e3b" stroke-width="1.2" stroke-linejoin="round"/>
+                            <polygon points="12,4.8 19.2,10.5 16.8,18.8 7.2,18.8 4.8,10.5" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.8"/>
+                        </svg>
+                    </button>
+
+                    <!-- 6. Ellipse / Circle -->
+                    <button class="mapinfo-tool-btn" data-tool="ellipse" onclick="window.gisEditor && window.gisEditor.setMode('ellipse')" title="Hình Elip / Hình tròn (Ellipse / Circle) - Nhấp tâm và bán kính">
+                        <svg viewBox="0 0 24 24">
+                            <ellipse cx="12" cy="12" rx="9" ry="8" fill="url(#mi-poly-grad)" stroke="#064e3b" stroke-width="1.2"/>
+                            <ellipse cx="12" cy="12" rx="8" ry="7" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.8"/>
+                        </svg>
+                    </button>
+
+                    <!-- 7. Rectangle -->
+                    <button class="mapinfo-tool-btn" data-tool="rectangle" onclick="window.gisEditor && window.gisEditor.setMode('rectangle')" title="Hình chữ nhật (Rectangle) - Nhấp 2 góc đối diện">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="3" y="5" width="18" height="14" fill="url(#mi-poly-grad)" stroke="#064e3b" stroke-width="1.2"/>
+                            <rect x="4" y="6" width="16" height="12" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.8"/>
+                        </svg>
+                    </button>
+
+                    <!-- 8. Rounded Rectangle -->
+                    <button class="mapinfo-tool-btn" data-tool="roundrect" onclick="window.gisEditor && window.gisEditor.setMode('roundrect')" title="Hình chữ nhật bo góc (Rounded Rectangle)">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="3" y="5" width="18" height="14" rx="4" ry="4" fill="url(#mi-poly-grad)" stroke="#064e3b" stroke-width="1.2"/>
+                            <rect x="4" y="6" width="16" height="12" rx="3" ry="3" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.8"/>
+                        </svg>
+                    </button>
+
+                    <!-- 9. Text Label -->
+                    <button class="mapinfo-tool-btn" data-tool="text" onclick="window.gisEditor && window.gisEditor.setMode('text')" title="Chữ / Nhãn ghi chú (Text) - Đặt nhãn chữ trực tiếp lên bản đồ">
+                        <svg viewBox="0 0 24 24">
+                            <text x="12" y="19" font-family="'Times New Roman', serif" font-size="20" font-weight="900" text-anchor="middle" fill="url(#mi-text-grad)" stroke="#075985" stroke-width="0.6">A</text>
+                        </svg>
+                    </button>
+
+                    <!-- 10. Frame -->
+                    <button class="mapinfo-tool-btn" data-tool="frame" onclick="window.gisEditor && window.gisEditor.setMode('frame')" title="Khung viền (Frame) - Vẽ khung bao khu vực">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="3" y="4" width="18" height="16" fill="none" stroke="#64748b" stroke-width="1.5"/>
+                            <rect x="5.5" y="6.5" width="13" height="11" fill="none" stroke="#94a3b8" stroke-width="1"/>
+                        </svg>
+                    </button>
+
+                    <!-- Divider 1 -->
+                    <div class="mapinfo-sep"></div>
+
+                    <!-- 11. Reshape -->
+                    <button class="mapinfo-tool-btn" data-tool="reshape" onclick="window.gisEditor && window.gisEditor.setMode('reshape')" title="Sửa đỉnh (Reshape / Node Edit) - Kéo nắn các mốc ranh">
+                        <svg viewBox="0 0 24 24">
+                            <polygon points="12,4 19,10 16,19 7,19 4,10" fill="#e2e8f0" fill-opacity="0.5" stroke="#64748b" stroke-width="1.2" stroke-dasharray="2,2"/>
+                            <rect x="10.5" y="2.5" width="3.5" height="3.5" fill="#ffffff" stroke="#475569" stroke-width="1"/>
+                            <rect x="17.5" y="8.5" width="3.5" height="3.5" fill="#ffffff" stroke="#475569" stroke-width="1"/>
+                            <rect x="14.5" y="17.5" width="3.5" height="3.5" fill="#ffffff" stroke="#475569" stroke-width="1"/>
+                            <rect x="5.5" y="17.5" width="3.5" height="3.5" fill="#ffffff" stroke="#475569" stroke-width="1"/>
+                            <rect x="2.5" y="8.5" width="3.5" height="3.5" fill="#ffffff" stroke="#475569" stroke-width="1"/>
+                        </svg>
+                    </button>
+
+                    <!-- 12. Add Node -->
+                    <button class="mapinfo-tool-btn" data-tool="addnode" onclick="window.gisEditor && window.gisEditor.setMode('addnode')" title="Thêm đỉnh (Add Node) - Chèn thêm mốc ranh mới vào cạnh">
+                        <svg viewBox="0 0 24 24">
+                            <polygon points="12,4 19,10 16,19 7,19 4,10" fill="#e2e8f0" fill-opacity="0.5" stroke="#64748b" stroke-width="1.2"/>
+                            <rect x="10.5" y="2.5" width="3.5" height="3.5" fill="#ffffff" stroke="#475569" stroke-width="1"/>
+                            <rect x="5.5" y="17.5" width="3.5" height="3.5" fill="#ffffff" stroke="#475569" stroke-width="1"/>
+                            <path d="M16 11 L22 11 M19 8 L19 14" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+
+                    <!-- Divider 2 -->
+                    <div class="mapinfo-sep"></div>
+
+                    <!-- 13. Symbol Style -->
+                    <button class="mapinfo-tool-btn style-btn" data-style="symbol" onclick="window.gisEditor && window.gisEditor.toggleStyleModal('symbol')" title="Định dạng ký hiệu điểm (Symbol Style)">
+                        <svg viewBox="0 0 24 24">
+                            <ellipse cx="9" cy="14" rx="5" ry="1.8" fill="#0891b2"/>
+                            <path d="M7 13 C7 11 8 8 8 6 L11 6 C11 8 12 11 12 13 Z" fill="url(#mi-pin-grad)"/>
+                            <ellipse cx="9.5" cy="6" rx="4" ry="1.8" fill="#a5f3fc"/>
+                            <polygon points="16,3 22,3 22,9" fill="#0284c7"/>
+                        </svg>
+                    </button>
+
+                    <!-- 14. Line Style -->
+                    <button class="mapinfo-tool-btn style-btn" data-style="line" onclick="window.gisEditor && window.gisEditor.toggleStyleModal('line')" title="Định dạng nét vẽ / đường viền (Line Style)">
+                        <svg viewBox="0 0 24 24">
+                            <line x1="3" y1="19" x2="16" y2="6" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round"/>
+                            <polygon points="16,3 22,3 22,9" fill="#0284c7"/>
+                        </svg>
+                    </button>
+
+                    <!-- 15. Region Style -->
+                    <button class="mapinfo-tool-btn style-btn" data-style="region" onclick="window.gisEditor && window.gisEditor.toggleStyleModal('region')" title="Định dạng vùng / màu tô đa giác (Region Style)">
+                        <svg viewBox="0 0 24 24">
+                            <polygon points="10,6 17,12 14,20 5,20 3,12" fill="url(#mi-poly-grad)" stroke="#064e3b" stroke-width="1.2"/>
+                            <polygon points="16,3 22,3 22,9" fill="#0284c7"/>
+                        </svg>
+                    </button>
+
+                    <!-- 16. Text Style -->
+                    <button class="mapinfo-tool-btn style-btn" data-style="text" onclick="window.gisEditor && window.gisEditor.toggleStyleModal('text')" title="Định dạng font chữ / cỡ chữ (Text Style)">
+                        <svg viewBox="0 0 24 24">
+                            <text x="9" y="20" font-family="'Times New Roman', serif" font-size="18" font-weight="900" text-anchor="middle" fill="url(#mi-text-grad)">A</text>
+                            <polygon points="16,3 22,3 22,9" fill="#0284c7"/>
+                        </svg>
+                    </button>
+
+                    <!-- 17. Fractional Label Button -->
+                    <button class="mapinfo-tool-btn style-btn" id="btn-mapinfo-fractional-label" onclick="window.gisEditor && window.gisEditor.openFractionalLabelModal()" title="Thiết lập nhãn phân số theo lô rừng (Tử số 2 trường / Mẫu số 2 trường)">
+                        <svg viewBox="0 0 24 24">
+                            <text x="12" y="8" font-family="'Times New Roman', serif" font-size="9" font-weight="900" text-anchor="middle" fill="#fde047">a-b</text>
+                            <line x1="3" y1="12" x2="21" y2="12" stroke="#fde047" stroke-width="1.8" stroke-linecap="round"/>
+                            <text x="12" y="21" font-family="'Times New Roman', serif" font-size="9" font-weight="900" text-anchor="middle" fill="#fde047">c-d</text>
+                        </svg>
+                    </button>
+
+                    <!-- Toggle/Minimize Button -->
+                    <button class="mapinfo-minimize-btn" id="btn-toggle-mapinfo" title="Thu gọn / Mở rộng thanh công cụ MapInfo">━</button>
+                </div>
+
+                <!-- Sub-bar for metrics & actions -->
+                <div class="mapinfo-subbar" id="mapinfo-subbar" style="display: none;">
+                    <div class="mapinfo-subbar-content">
+                        <span class="mapinfo-hint" id="mapinfo-hint">Sẵn sàng vẽ.</span>
+                        <span class="mapinfo-metrics" id="mapinfo-metrics"></span>
+                    </div>
+                    <div class="mapinfo-actions">
+                        <button class="mapinfo-action-btn btn-finish" id="btn-mapinfo-finish" onclick="window.gisEditor && window.gisEditor.finishCurrentShape()" style="display: none; background: #059669; color: #fff; font-weight: 700; border-color: #10b981;" title="Hoàn tất hình vẽ khép góc (hoặc nhấp đúp trên bản đồ)">✅ Hoàn tất</button>
+                        <button class="mapinfo-action-btn btn-save" id="btn-mapinfo-save" onclick="window.gisEditor && window.gisEditor.saveDrawn()" title="Lưu vào lớp bản đồ">💾 Lưu Lô</button>
+                        <button class="mapinfo-action-btn btn-undo" id="btn-mapinfo-undo" onclick="window.gisEditor && window.gisEditor.undo()" title="Hoàn tác điểm vừa vẽ">↩️ Hoàn tác</button>
+                        <button class="mapinfo-action-btn btn-clear" id="btn-mapinfo-clear" onclick="window.gisEditor && window.gisEditor.clear()" title="Xóa hết hình đang vẽ">🗑️ Xóa</button>
+                        <button class="mapinfo-action-btn btn-cancel" id="btn-mapinfo-cancel" onclick="window.gisEditor && window.gisEditor.cancel()" title="Hủy thao tác">❌ Đóng</button>
+                    </div>
+                </div>
+
+                <!-- Style Modals -->
+                <!-- 1. Symbol Style Modal -->
+                <div class="mapinfo-style-popup" id="modal-symbol-style" style="display: none;">
+                    <div class="style-popup-title">
+                        <span>📍 Định Dạng Ký Hiệu (Symbol Style)</span>
+                        <button type="button" class="style-popup-close" onclick="window.gisEditor.toggleStyleModal('symbol')">✕</button>
+                    </div>
+                    <div class="style-field">
+                        <label>Biểu tượng:</label>
+                        <select id="mi-symbol-type" class="style-input">
+                            <option value="pin">Ghim 3D (Pushpin)</option>
+                            <option value="circle">Chấm tròn (Circle)</option>
+                            <option value="tree">Cây rừng (Tree)</option>
+                            <option value="star">Ngôi sao (Star)</option>
+                            <option value="triangle">Mốc tam giác (Trig)</option>
+                            <option value="flag">Cờ mốc giới (Flag)</option>
+                        </select>
+                    </div>
+                    <div class="style-field">
+                        <label>Màu sắc:</label>
+                        <input type="color" id="mi-symbol-color" value="#06b6d4" class="style-color-picker">
+                    </div>
+                    <div class="style-field">
+                        <label>Kích thước:</label>
+                        <select id="mi-symbol-size" class="style-input">
+                            <option value="16">Nhỏ (16px)</option>
+                            <option value="22" selected>Vừa (22px)</option>
+                            <option value="30">Lớn (30px)</option>
+                        </select>
+                    </div>
+                    <button class="style-apply-btn" onclick="window.gisEditor.applySymbolStyle()">Áp dụng</button>
+                </div>
+
+                <!-- 2. Line Style Modal -->
+                <div class="mapinfo-style-popup" id="modal-line-style" style="display: none;">
+                    <div class="style-popup-title">
+                        <span>📏 Định Dạng Nét Vẽ (Line Style)</span>
+                        <button type="button" class="style-popup-close" onclick="window.gisEditor.toggleStyleModal('line')">✕</button>
+                    </div>
+                    <div class="style-field">
+                        <label>Kiểu nét:</label>
+                        <select id="mi-line-type" class="style-input">
+                            <option value="solid">Nét liền (Solid)</option>
+                            <option value="dashed">Nét đứt (Dashed)</option>
+                            <option value="dotted">Chấm bi (Dotted)</option>
+                        </select>
+                    </div>
+                    <div class="style-field">
+                        <label>Màu nét:</label>
+                        <input type="color" id="mi-line-color" value="#0284c7" class="style-color-picker">
+                    </div>
+                    <div class="style-field">
+                        <label>Độ dày:</label>
+                        <select id="mi-line-width" class="style-input">
+                            <option value="1">1 px (Mảnh)</option>
+                            <option value="2" selected>2.5 px (Chuẩn)</option>
+                            <option value="4">4 px (Đậm)</option>
+                            <option value="6">6 px (Rất đậm)</option>
+                        </select>
+                    </div>
+                    <button class="style-apply-btn" onclick="window.gisEditor.applyLineStyle()">Áp dụng</button>
+                </div>
+
+                <!-- 3. Region Style Modal -->
+                <div class="mapinfo-style-popup" id="modal-region-style" style="display: none;">
+                    <div class="style-popup-title">
+                        <span>🟢 Định Dạng Vùng / Đa Giác (Region Style)</span>
+                        <button type="button" class="style-popup-close" onclick="window.gisEditor.toggleStyleModal('region')">✕</button>
+                    </div>
+                    <div class="style-field">
+                        <label>Màu tô (Fill):</label>
+                        <input type="color" id="mi-region-fill-color" value="#10b981" class="style-color-picker">
+                    </div>
+                    <div class="style-field">
+                        <label>Độ trong suốt:</label>
+                        <select id="mi-region-opacity" class="style-input">
+                            <option value="0.1">10% (Rất mờ)</option>
+                            <option value="0.35" selected>35% (Chuẩn)</option>
+                            <option value="0.6">60% (Đậm)</option>
+                            <option value="0.9">90% (Gần đặc)</option>
+                            <option value="0">0% (Chỉ viền ranh)</option>
+                        </select>
+                    </div>
+                    <div class="style-field">
+                        <label>Màu viền:</label>
+                        <input type="color" id="mi-region-stroke-color" value="#064e3b" class="style-color-picker">
+                    </div>
+                    <button class="style-apply-btn" onclick="window.gisEditor.applyRegionStyle()">Áp dụng</button>
+                </div>
+
+                <!-- 4. Text Style Modal -->
+                <div class="mapinfo-style-popup" id="modal-text-style" style="display: none;">
+                    <div class="style-popup-title">
+                        <span>🔤 Định Dạng Chữ / Nhãn (Text Style)</span>
+                        <button type="button" class="style-popup-close" onclick="window.gisEditor.toggleStyleModal('text')">✕</button>
+                    </div>
+                    <div class="style-field">
+                        <label>Font chữ:</label>
+                        <select id="mi-text-font" class="style-input">
+                            <option value="'Plus Jakarta Sans', sans-serif">Plus Jakarta Sans</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                            <option value="Arial, sans-serif">Arial</option>
+                            <option value="Roboto, sans-serif">Roboto</option>
+                        </select>
+                    </div>
+                    <div class="style-field">
+                        <label>Cỡ chữ:</label>
+                        <select id="mi-text-size" class="style-input">
+                            <option value="12">12 pt (Nhỏ)</option>
+                            <option value="14" selected>14 pt (Vừa)</option>
+                            <option value="18">18 pt (Lớn)</option>
+                            <option value="24">24 pt (Tiêu đề)</option>
+                        </select>
+                    </div>
+                    <div class="style-field">
+                        <label>Màu chữ:</label>
+                        <input type="color" id="mi-text-color" value="#ffffff" class="style-color-picker">
+                    </div>
+                    <div class="style-field" style="display:flex; gap:10px; align-items:center;">
+                        <label><input type="checkbox" id="mi-text-bold" checked> In đậm</label>
+                        <label><input type="checkbox" id="mi-text-halo" checked> Viền sáng chống chìm</label>
+                    </div>
+                    <button class="style-apply-btn" onclick="window.gisEditor.applyTextStyle()">Áp dụng</button>
+                </div>
+            </div>
+
+            <!-- Floating Basemap & Opacity Controls -->
+            <div class="map-floating-controls">
+                
+                <!-- Basemap Switcher -->
+                <div class="basemap-picker" id="basemap-picker" title="Kéo góc dưới phải để mở rộng hoặc thu nhỏ bảng bản đồ nền">
+                    <div class="basemap-header" id="basemap-header" title="Bấm để Thu gọn / Mở rộng">
+                        <span class="basemap-title">Lớp Bản Đồ Nền & Vệ Tinh (9)</span>
+                        <button class="panel-toggle-btn" id="btn-toggle-basemap" title="Thu gọn danh sách bản đồ">━</button>
+                    </div>
+                    <div class="basemap-list" id="basemap-list">
+                        <div class="basemap-option active" data-basemap="google-sat" style="color: #38bdf8; font-weight: 700;">
+                            <span>🛰️</span>
+                            <span>Google Satellite (Rõ nhất - Zoom 22 soi nhà, mộ) ⭐</span>
+                        </div>
+                        <div class="basemap-option" data-basemap="google-hybrid" style="color: #60a5fa; font-weight: 600;">
+                            <span>🗺️</span>
+                            <span>Google Hybrid (Vệ tinh + Tên đường, địa danh)</span>
+                        </div>
+                        <div class="basemap-option" data-basemap="esri-sat" style="color: #34d399; font-weight: 600;">
+                            <span>🌍</span>
+                            <span>Esri World Imagery (Maxar 30cm - Nét cao)</span>
+                        </div>
+                        <div class="basemap-option" data-basemap="planet-latest" style="color: #10b981;">
+                            <span>🪐</span>
+                            <span>Planet Rừng Mới Nhất (08/2026) ⏱️</span>
+                        </div>
+                        <div class="basemap-option" data-basemap="sentinel2-daily" style="color: #c084fc; font-weight: 600;">
+                            <span>🇪🇺</span>
+                            <span>Sentinel-2 Chụp Theo Ngày (30m) ⏱️</span>
+                        </div>
+                        <div class="basemap-option" data-basemap="sentinel2-latest" style="color: #a78bfa;">
+                            <span>🇪🇺</span>
+                            <span>Sentinel-2 Không Mây (Copernicus 2025) ⏱️</span>
+                        </div>
+                        <div class="basemap-option" data-basemap="nasa-daily" style="color: #f97316;">
+                            <span>🛰️</span>
+                            <span>NASA Chụp Hàng Ngày ⏱️</span>
+                        </div>
+                        <div class="basemap-option" data-basemap="esri-wayback" style="color: #38bdf8;">
+                            <span>🌍</span>
+                            <span>Esri Wayback Lịch Sử (2014-2026) ⏱️</span>
+                        </div>
+                        <div class="basemap-option" data-basemap="osm">
+                            <span>🛣️</span>
+                            <span>OpenStreetMap (Giao thông)</span>
+                        </div>
+                        <div class="basemap-option" data-basemap="topo">
+                            <span>⛰️</span>
+                            <span>Bản đồ Địa hình (Đường bình độ)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layer Opacity Slider -->
+                <div class="layer-opacity-control">
+                    <div class="opacity-header">
+                        <span>Độ Trong Suốt Lô</span>
+                        <span id="opacity-val">75%</span>
+                    </div>
+                    <input type="range" id="layer-opacity-slider" class="opacity-slider" min="0" max="1" step="0.05" value="0.75">
+                </div>
+
+                <!-- 3D Terrain & Contours -->
+                <div class="map-extra-actions">
+                    <button class="btn-map-control" id="btn-toggle-3d">🏔️ Bản Đồ 3D Núi Đồi</button>
+                    <button class="btn-map-control" id="btn-toggle-contours">📉 Đường Bình Độ (10m)</button>
+                </div>
+
+            </div>
+
+            <!-- Satellite Imagery Multi-Provider Timeline Slider -->
+            <div class="satellite-timeline-container" id="satellite-timeline">
+                <div class="timeline-header" id="timeline-header">
+                    <div class="timeline-title">
+                        <span id="timeline-title-text">🪐 VỆ TINH PLANET NICFI (2020 - 2026)</span>
+                        <span class="timeline-current-label" id="timeline-current-label">Tháng 08/2026 (Mới Nhất)</span>
+                    </div>
+                    <div class="timeline-controls">
+                        <button class="btn-timeline-play" id="btn-open-copernicus" title="Mở vị trí và toạ độ này trực tiếp trên Copernicus Data Space Browser (ESA)" onclick="window.app && window.app.openCopernicusBrowser()" style="background: rgba(168, 85, 247, 0.2); border-color: #a855f7; color: #c084fc;">🌐 Mở Copernicus ESA</button>
+                        <button class="btn-timeline-play" id="btn-timeline-play" title="Tự động tua dòng thời gian">▶ Tua Tự Động</button>
+                        <button class="panel-toggle-btn" id="btn-toggle-timeline" title="Thu gọn / Mở rộng">━</button>
+                    </div>
+                </div>
+                <div class="timeline-body" id="timeline-body">
+                    <div class="timeline-source-tabs" id="timeline-source-tabs">
+                        <button class="timeline-source-btn active" data-source="planet" title="Ảnh vệ tinh Planet NICFI 3m theo từng tháng (12/2020 - 08/2026)">🪐 Planet (Tháng)</button>
+                        <button class="timeline-source-btn" data-source="sentinel2-daily" title="Ảnh vệ tinh Copernicus Sentinel-2 chụp theo ngày thực tế (HLS/MSI 30m)">🇪🇺 Sentinel-2 (Ngày)</button>
+                        <button class="timeline-source-btn" data-source="sentinel2" title="Ảnh vệ tinh Copernicus Sentinel-2 không mây tổng hợp (2016 - 2025)">🇪🇺 Sentinel-2 (Không Mây)</button>
+                        <button class="timeline-source-btn" data-source="nasa" title="Ảnh vệ tinh NASA GIBS chụp hàng ngày (Mới nhất hôm qua)">🛰️ NASA GIBS (Ngày)</button>
+                        <button class="timeline-source-btn" data-source="wayback" title="Kho ảnh vệ tinh lịch sử Esri Wayback Maxar (2014 - 2026)">🌍 Esri Wayback</button>
+                    </div>
+                    <div class="timeline-slider-row">
+                        <span class="timeline-milestone" id="timeline-min-label">12/2020</span>
+                        <input type="range" id="timeline-slider" min="0" max="68" step="1" value="68" class="timeline-slider">
+                        <span class="timeline-milestone" id="timeline-max-label">08/2026</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coordinate Tracker Bar (Tự động thích ứng tỉnh & kinh tuyến trục VN-2000) -->
+            <div class="coord-display-bar" id="cursor-coords">
+                <span class="coord-tag">📍 Đang dò vị trí...</span>
+                <span>Di chuột hoặc kéo bản đồ để hiển thị tọa độ VN-2000 chuẩn nội tỉnh</span>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- PLOT DETAIL MODAL -->
+    <div class="modal-overlay" id="plot-modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn" id="modal-close-btn">✕</button>
+            <div id="modal-plot-body">
+                <!-- Dynamically populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MAP IMPORT MODAL -->
+    <div class="modal-overlay" id="import-modal-overlay">
+        <div class="modal-content" style="width: 580px;">
+            <button class="modal-close-btn" id="import-modal-close-btn">✕</button>
+            <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
+                    <span>📤</span>
+                    <span>NHẬP BẢN ĐỒ (SHAPEFILE / MAPINFO / GEOJSON)</span>
+                </h2>
+                <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">
+                    Hỗ trợ tệp <b>.ZIP</b> (chứa Shapefile hoặc MapInfo TAB/MIF), tệp <b>.MIF</b>, <b>.GeoJSON</b> hoặc <b>.KML</b>.
+                </p>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div class="form-group">
+                    <label class="form-label">Tên lớp bản đồ:</label>
+                    <input type="text" id="import-layer-name" class="search-input" placeholder="Ví dụ: Kiểm kê rừng MapInfo Ba Tơ, Địa chính xã...">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label class="form-label">Chọn Tỉnh:</label>
+                        <select id="import-province-select" class="filter-select">
+                            <option value="Quảng Ngãi">Quảng Ngãi (KTT 108°00')</option>
+                            <option value="Bình Định">Bình Định (KTT 108°15')</option>
+                            <option value="Phú Yên">Phú Yên (KTT 108°30')</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Phân Loại Nguồn Bản Đồ:</label>
+                        <select id="import-source-type" class="filter-select">
+                            <option value="Kiểm kê rừng">Kiểm kê rừng (MapInfo / SHP)</option>
+                            <option value="Địa chính">Bản đồ Địa chính</option>
+                            <option value="Quy hoạch lâm nghiệp">Quy hoạch 3 loại rừng</option>
+                            <option value="Hiện trạng rừng">Hiện trạng rừng mới nhất</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="upload-dropzone" id="map-file-dropzone" style="padding: 26px 20px;">
+                    <div class="upload-icon">🗺️</div>
+                    <div class="upload-text">Kéo thả file KML (.kml, .kmz), MBTiles (.mbtiles), Shapefile / MapInfo (.zip) hoặc .GeoJSON vào đây</div>
+                    <div class="upload-hint">Hoặc bấm để duyệt file từ máy tính của bạn</div>
+                    <input type="file" id="map-file-input" accept=".zip,.shp,.tab,.mif,.geojson,.json,.kml,.kmz,.mbtiles" style="display: none;">
+                </div>
+
+                <div style="background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 12px; font-size: 11px; color: #cbd5e1; line-height: 1.6;">
+                    <b style="color: #38bdf8;">📁 Hướng dẫn nạp file bản đồ:</b><br/>
+                    • <b>Google Earth KML / KMZ:</b> Tải trực tiếp file <code>.kml</code> hoặc <code>.kmz</code> (tự động nhận diện ranh giới và thuộc tính).<br/>
+                    • <b>Bản đồ MBTiles:</b> Tải file gạch ngoại tuyến <code>.mbtiles</code> (hỗ trợ raster PNG/JPG/WebP và vector PBF).<br/>
+                    • <b>MapInfo TAB:</b> Nén các file <code>.tab</code>, <code>.dat</code>, <code>.map</code>, <code>.id</code> thành 1 file <code>.ZIP</code>.<br/>
+                    • <b>MapInfo MIF:</b> Nén <code>.mif</code> và <code>.mid</code> thành file <code>.ZIP</code> (hoặc tải trực tiếp file <code>.mif</code>).<br/>
+                    • <b>Shapefile:</b> Nén đủ <code>.shp</code>, <code>.dbf</code>, <code>.shx</code>, <code>.prj</code> thành 1 file <code>.ZIP</code>.<br/>
+                    • Hệ thống tự động chuyển đổi hệ tọa độ <b>VN-2000</b> và giải mã font tiếng Việt <b>TCVN3 (.VnTime)</b> / <b>VNI</b> sang Unicode.
+                </div>
+
+                <div id="import-status-msg" style="display: none; padding: 12px; border-radius: 8px; font-size: 13px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ATTRIBUTE TABLE INSPECTOR MODAL (QGIS, MAPINFO, KML) -->
+    <div class="modal-overlay" id="attribute-modal-overlay">
+        <div class="attribute-modal-content">
+            <div class="attribute-modal-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">📋</span>
+                    <div>
+                        <div style="font-size: 15px; font-weight: 800; color: #fff;" id="attr-modal-title">BẢNG THUỘC TÍNH (QGIS, MAPINFO, KML)</div>
+                        <div style="font-size: 11px; color: #94a3b8;" id="attr-modal-subtitle">Trích xuất toàn bộ trường dữ liệu thuộc tính từ file Shapefile (.DBF), MapInfo (.DAT / .MID), Google Earth (.KML)</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn-primary" id="btn-export-attr-csv" style="padding: 6px 12px; font-size: 11px; background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #34d399;">
+                        📊 Xuất CSV / Excel
+                    </button>
+                    <button class="modal-close-btn" id="attribute-modal-close-btn" style="position: static;">✕</button>
+                </div>
+            </div>
+
+            <div class="attribute-toolbar">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span style="font-size: 12px; color: #94a3b8;">Chọn lớp bản đồ:</span>
+                    <select id="attr-layer-select" class="filter-select" style="min-width: 250px;"></select>
+                </div>
+                <div class="search-input-wrapper" style="width: 320px;">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="attr-search-input" class="search-input" placeholder="Lọc nhanh theo bất kỳ trường nào...">
+                </div>
+            </div>
+
+            <div class="attribute-table-wrapper" id="attr-table-container">
+                <!-- Dynamically rendered table -->
+            </div>
+
+            <div class="attribute-pagination">
+                <span id="attr-pagination-info">Đang hiển thị 0 dòng</span>
+                <div style="display: flex; gap: 6px;">
+                    <button class="btn-layer-action" id="btn-attr-prev">◀ Trang trước</button>
+                    <span id="attr-page-number" style="padding: 5px 8px; font-weight: 700; color: #fff;">1 / 1</span>
+                    <button class="btn-layer-action" id="btn-attr-next">Trang sau ▶</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SATELLITE RASTER EXPORT MODAL (.ECW / .EWW / .PRJ) -->
+    <div class="modal-overlay" id="export-raster-modal-overlay">
+        <div class="modal-content" style="width: 580px; max-width: 95vw;">
+            <button class="modal-close-btn" id="export-raster-modal-close-btn">✕</button>
+            <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
+                    <span>💾</span>
+                    <span>XUẤT ẢNH VỆ TINH NÉN (.ECW / .EWW / .PRJ)</span>
+                </h2>
+                <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">
+                    Đóng gói ảnh viễn thám độ nét cao kèm file tọa độ thế giới <b>.EWW</b> và file hệ quy chiếu <b>.PRJ</b> chuẩn <b>VN-2000</b> để mở trực tiếp trong QGIS, MapInfo, MicroStation.
+                </p>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <!-- 1. CHẾ ĐỘ XUẤT (2 LOẠI) -->
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 700; color: #38bdf8;">1. Chọn Chế Độ Xuất Phạm Vi Ảnh:</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px;">
+                        <label class="export-mode-card active" id="mode-viewport-card" style="border: 2px solid #0284c7; background: rgba(2, 132, 199, 0.15); padding: 10px; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 4px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="radio" name="export-scope-mode" id="export-mode-viewport" value="viewport" checked style="accent-color: #0284c7;">
+                                <span style="font-weight: 700; font-size: 13px; color: #fff;">🖥️ Màn hình đang mở</span>
+                            </div>
+                            <span style="font-size: 11px; color: #94a3b8;">Xuất toàn bộ khung nhìn bản đồ hiện tại trên màn hình</span>
+                        </label>
+
+                        <label class="export-mode-card" id="mode-region-card" style="border: 1px solid rgba(255,255,255,0.15); background: rgba(255, 255, 255, 0.03); padding: 10px; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 4px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="radio" name="export-scope-mode" id="export-mode-region" value="region" style="accent-color: #10b981;">
+                                <span style="font-weight: 700; font-size: 13px; color: #fff;">📐 Theo vùng đã chọn</span>
+                            </div>
+                            <span style="font-size: 11px; color: #94a3b8;">Xuất theo phạm vi lớp bản đồ hoặc vùng bao đã chọn</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- SUB-CONTAINER FOR REGION SELECTION -->
+                <div id="export-region-select-box" style="display: none; background: rgba(0,0,0,0.25); border: 1px dashed #38bdf8; border-radius: 8px; padding: 10px;">
+                    <label class="form-label" style="font-size: 11px; color: #38bdf8;">Chọn Lớp Bản Đồ Làm Ranh Giới Xuất:</label>
+                    <select id="export-region-layer-select" class="filter-select" style="width: 100%; margin-top: 4px;"></select>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                        <span id="export-region-bounds-info" style="font-size: 11px; color: #94a3b8;">Tọa độ: Tự động trích xuất từ ranh giới lớp</span>
+                    </div>
+                </div>
+
+                <!-- VIEWPORT INFO -->
+                <div id="export-viewport-info-box" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; font-size: 11px; color: #cbd5e1; display: flex; justify-content: space-between; align-items: center;">
+                    <span id="export-current-viewport-coords">📍 Khung nhìn hiện tại: Đang lấy tọa độ...</span>
+                    <button type="button" id="btn-refresh-export-viewport" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                        🔄 Cập nhật màn hình
+                    </button>
+                </div>
+
+                <!-- 2. NGUỒN ẢNH VỆ TINH / BẢN ĐỒ NỀN -->
+                <div class="form-group">
+                    <label class="form-label">2. Chọn Nguồn Ảnh Vệ Tinh / Bản Đồ Nền:</label>
+                    <select id="export-raster-basemap" class="filter-select">
+                        <option value="current" selected>⚡ Lớp ảnh đang mở trên bản đồ (Tự động)</option>
+                        <option value="google-sat">🛰️ Google Maps Satellite (Vệ tinh Google nét căng)</option>
+                        <option value="google-hybrid">🗺️ Google Maps Hybrid (Vệ tinh + Địa danh)</option>
+                        <option value="esri">🌍 Esri World Imagery (Maxar độ nét sub-meter)</option>
+                        <option value="planet">🪐 Planet Labs NICFI (Ảnh rừng độ phân giải 3m)</option>
+                        <option value="sentinel">🇪🇺 Copernicus Sentinel-2 (Mốc EUDR 2020 không mây)</option>
+                        <option value="nasa">🛰️ NASA GIBS VIIRS (Ảnh vệ tinh chụp hàng ngày)</option>
+                        <option value="topo">⛰️ Bản đồ địa hình Topo (Đường bình độ)</option>
+                    </select>
+                </div>
+
+                <!-- 3. KHU VỰC TỈNH (HỆ QUY CHIẾU VN-2000) -->
+                <div class="form-group">
+                    <label class="form-label">3. Chọn Tỉnh (Để gán Kinh tuyến trục VN-2000 chuẩn):</label>
+                    <select id="export-raster-province" class="filter-select">
+                        <option value="Quảng Ngãi">Quảng Ngãi (Kinh tuyến trục VN-2000 108°00')</option>
+                        <option value="Bình Định">Bình Định (Kinh tuyến trục VN-2000 108°15')</option>
+                        <option value="Phú Yên">Phú Yên (Kinh tuyến trục VN-2000 108°30')</option>
+                    </select>
+                </div>
+
+                <!-- 4. ĐỘ PHÂN GIẢI -->
+                <div class="form-group">
+                    <label class="form-label">4. Mức Độ Phân Giải (Độ Phóng Đại Zoom):</label>
+                    <select id="export-raster-zoom" class="filter-select">
+                        <option value="12">Mức 12 (~38m / pixel - Cấp toàn huyện)</option>
+                        <option value="14" selected>Mức 14 (~9.5m / pixel - Khuyến nghị cho tiểu khu/xã)</option>
+                        <option value="15">Mức 15 (~4.8m / pixel - Cấp từng lô rừng chi tiết)</option>
+                        <option value="16">Mức 16 (~2.4m / pixel - Chi tiết ranh giới thửa)</option>
+                    </select>
+                </div>
+
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 12px; font-size: 11px; color: #cbd5e1; line-height: 1.6;">
+                    <b style="color: #34d399;">📦 Gói tải về (.ZIP) bao gồm:</b><br/>
+                    • File ảnh viễn thám: <code>.ecw</code> & <code>.jpg</code><br/>
+                    • File nắn tọa độ thế giới: <code>.eww</code> & <code>.jgw</code><br/>
+                    • File phép chiếu ESRI WKT: <code>.prj</code> (VN-2000 nội tỉnh chuẩn 3 độ)<br/>
+                    • Mở trực tiếp trong QGIS, MapInfo, MicroStation.
+                </div>
+
+                <button class="btn-primary" id="btn-trigger-raster-download" style="width: 100%; padding: 12px; font-size: 14px;">
+                    ⬇️ Tải Gói Ảnh Vệ Tinh .ZIP Về Máy Tính
+                </button>
+                <div id="export-raster-status" style="display: none; font-size: 12px; text-align: center;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GO TO COORDINATES MODAL -->
+    <div class="modal-overlay" id="coord-search-modal-overlay">
+        <div class="modal-content" style="max-width: 580px;">
+            <button class="modal-close-btn" id="coord-search-modal-close-btn">✕</button>
+            <div class="modal-header">
+                <span class="modal-badge" style="background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; color: #38bdf8;">Định Vị Tọa Độ</span>
+                <h2 style="font-size: 18px; font-weight: 700; color: #fff; margin-top: 8px;">📍 Tìm Đến Tọa Độ & Cắm Mốc Vị Trí</h2>
+                <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">
+                    Hỗ trợ hệ tọa độ <b>VN-2000 nội tỉnh (3 độ)</b> trích từ sổ đỏ, bản đồ kiểm kê rừng, hoặc tọa độ <b>WGS84 GPS / Google Maps</b>.
+                </p>
+            </div>
+
+            <!-- Tab Switching for Coords Type -->
+            <div style="display: flex; gap: 8px; margin-top: 16px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px;">
+                <button type="button" class="prov-btn active" id="tab-coord-vn2000" style="flex: 1; text-align: center;">Hệ Tọa Độ VN-2000</button>
+                <button type="button" class="prov-btn" id="tab-coord-wgs84" style="flex: 1; text-align: center;">Hệ Tọa Độ WGS-84 (GPS)</button>
+            </div>
+
+            <!-- Form VN-2000 -->
+            <div id="form-coord-vn2000" style="margin-top: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Chọn Tỉnh / Kinh Tuyến Trục (KTT):</label>
+                    <select id="coord-vn2000-province" class="filter-select">
+                        <option value="108.0" data-prov="Quảng Ngãi" selected>Quảng Ngãi (KTT 108°00' - 108.0°)</option>
+                        <option value="108.25" data-prov="Bình Định">Bình Định (KTT 108°15' - 108.25°)</option>
+                        <option value="108.50" data-prov="Phú Yên">Phú Yên (KTT 108°30' - 108.5°)</option>
+                        <option value="107.75" data-prov="Quảng Nam">Quảng Nam (KTT 107°45' - 107.75°)</option>
+                        <option value="107.50" data-prov="Kon Tum">Kon Tum (KTT 107°30' - 107.5°)</option>
+                        <option value="108.50" data-prov="Gia Lai">Gia Lai (KTT 108°30' - 108.5°)</option>
+                        <option value="108.50" data-prov="Đắk Lắk">Đắk Lắk (KTT 108°30' - 108.5°)</option>
+                        <option value="108.25" data-prov="Khánh Hòa">Khánh Hòa (KTT 108°15' - 108.25°)</option>
+                        <option value="107.75" data-prov="Đà Nẵng">Đà Nẵng (KTT 107°45' - 107.75°)</option>
+                    </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label class="form-label">Tọa độ X (Trục Bắc - Northing, m):</label>
+                        <input type="number" step="any" id="coord-input-x" class="filter-input" placeholder="Ví dụ: 1678950.4" style="font-family: monospace;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tọa độ Y (Trục Đông - Easting, m):</label>
+                        <input type="number" step="any" id="coord-input-y" class="filter-input" placeholder="Ví dụ: 545620.8" style="font-family: monospace;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form WGS-84 -->
+            <div id="form-coord-wgs84" style="margin-top: 16px; display: none;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label class="form-label">Vĩ Độ (Latitude, North):</label>
+                        <input type="number" step="any" id="coord-input-lat" class="filter-input" placeholder="Ví dụ: 15.18243" style="font-family: monospace;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kinh Độ (Longitude, East):</label>
+                        <input type="number" step="any" id="coord-input-lon" class="filter-input" placeholder="Ví dụ: 108.54129" style="font-family: monospace;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paste Raw Coordinates Box -->
+            <div class="form-group" style="margin-top: 12px;">
+                <label class="form-label" style="font-size: 11px; color: #94a3b8;">Hoặc Dán Chuỗi Tọa Độ Nhanh (Từ Sổ đỏ / Excel / Google Maps):</label>
+                <input type="text" id="coord-quick-paste" class="filter-input" placeholder="Dán tọa độ: VD '1678950.4, 545620.8' hoặc '15.18243, 108.54129'" style="font-family: monospace; font-size: 12px;">
+            </div>
+
+            <!-- Zoom Level Choice -->
+            <div class="form-group" style="margin-top: 12px;">
+                <label class="form-label">Cấp Độ Phóng To Khi Bay Đến:</label>
+                <select id="coord-zoom-choice" class="filter-select">
+                    <option value="19" selected>Zoom 19 - Cực nét (Soi từng ngôi mộ, nhà cửa, ranh cây)</option>
+                    <option value="21">Zoom 21 - Cận cảnh tối đa (Từng mốc đá, ngói nóc nhà)</option>
+                    <option value="17">Zoom 17 - Chi tiết toàn bộ lô rừng thửa đất</option>
+                    <option value="14">Zoom 14 - Toàn cảnh xã / tiểu khu</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn-primary" id="btn-execute-coord-search" style="flex: 2; padding: 10px 16px; font-weight: 700; background: linear-gradient(135deg, #0284c7, #0ea5e9);">
+                    🎯 Bay Đến Vị Trí & Cắm Mốc
+                </button>
+                <button type="button" class="prov-btn" id="btn-clear-coord-inputs" style="flex: 1; text-align: center;">
+                    🔄 Nhập Lại
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TCVN3 <-> UNICODE FONT CONVERTER MODAL -->
+    <div class="modal-overlay" id="font-converter-modal-overlay">
+        <div class="modal-content" style="max-width: 680px;">
+            <button class="modal-close-btn" id="font-converter-modal-close-btn">✕</button>
+            <div class="modal-header">
+                <span class="modal-badge" style="background: rgba(168, 85, 247, 0.2); border-color: #a855f7; color: #c084fc;">Xử Lý Tiếng Việt Địa Chính</span>
+                <h2 style="font-size: 18px; font-weight: 700; color: #fff; margin-top: 8px;">🔤 Chuyển Đổi Mã Font Chữ (TCVN3 ⇄ Unicode)</h2>
+                <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">
+                    Khắc phục triệt để lỗi nhảy font trên bản đồ lâm nghiệp, sổ đỏ và hồ sơ địa chính cũ dùng bảng mã <b>TCVN3 / ABC (.VNTime, .VNAvant)</b> sang <b>Unicode (UTF-8)</b> chuẩn quốc tế và ngược lại.
+                </p>
+            </div>
+
+            <!-- Direction Switch -->
+            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 14px; margin-top: 14px;">
+                <div>
+                    <span style="font-size: 11px; color: #94a3b8; display: block;">Chiều chuyển đổi:</span>
+                    <span id="font-conv-direction-label" style="font-weight: 700; color: #c084fc; font-size: 14px;">TCVN3 (.VNTime / ABC) ➔ Unicode (UTF-8)</span>
+                </div>
+                <button type="button" class="btn-header" id="btn-toggle-font-direction" style="background: rgba(168, 85, 247, 0.25); border-color: #a855f7; color: #fff;">
+                    ⇄ Đảo Chiều Chuyển Đổi
+                </button>
+            </div>
+
+            <!-- Source Input -->
+            <div class="form-group" style="margin-top: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label class="form-label" id="font-source-label" style="margin-bottom: 0;">Văn bản gốc (TCVN3 / .VNTime):</label>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" id="btn-sample-tcvn3" style="background: none; border: none; color: #38bdf8; font-size: 11px; cursor: pointer; text-decoration: underline;">
+                            Thử mẫu chữ lỗi
+                        </button>
+                        <button type="button" id="btn-clear-font-source" style="background: none; border: none; color: #94a3b8; font-size: 11px; cursor: pointer;">
+                            Xóa trắng
+                        </button>
+                    </div>
+                </div>
+                <textarea id="font-source-text" class="filter-input" rows="4" placeholder="Nhập hoặc dán đoạn văn bản bị lỗi font vào đây... (Ví dụ: S¬n Hµ, Trµ Bång, Thöa ®Êt sè...)" style="font-family: monospace; font-size: 13px; line-height: 1.5; resize: vertical;"></textarea>
+            </div>
+            
+            <!-- Document File Upload -->
+            <div class="form-group" style="margin-top: 14px; background: rgba(0,0,0,0.25); border: 1px dashed #c084fc; border-radius: 8px; padding: 12px; text-align: center;">
+                <label class="form-label" style="color: #c084fc; font-weight: bold; margin-bottom: 8px;">Hoặc tải lên file Word (.docx) / Excel (.xlsx) để chuyển mã toàn bộ file:</label>
+                <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+                    <input type="file" id="font-doc-upload" accept=".docx,.xlsx" style="font-size: 13px; background: transparent; color: #fff; padding: 4px;">
+                    <button type="button" id="btn-convert-doc" class="btn-primary" style="background: rgba(168, 85, 247, 0.4); border-color: #a855f7; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: white;">
+                        Chuyển đổi & Tải xuống
+                    </button>
+                </div>
+                <div id="font-doc-status" style="margin-top: 8px; font-size: 11px; color: #34d399; display: none;">Đang xử lý... vui lòng đợi!</div>
+            </div>
+
+            <!-- Action Convert Button -->
+            <div style="display: flex; justify-content: center; margin: 10px 0;">
+                <button type="button" class="btn-primary" id="btn-execute-font-convert" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #9333ea, #a855f7); font-weight: 700;">
+                    ⚡ Chuyển Mã Ngay
+                </button>
+            </div>
+
+            <!-- Target Output -->
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label class="form-label" id="font-target-label" style="margin-bottom: 0; color: #4ade80;">Kết quả chuyển đổi (Unicode UTF-8):</label>
+                    <button type="button" id="btn-copy-font-result" style="background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #4ade80; padding: 2px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                        📋 Sao Chép Kết Quả
+                    </button>
+                </div>
+                <textarea id="font-target-text" class="filter-input" rows="4" readonly placeholder="Kết quả sau khi chuyển đổi sẽ hiển thị tại đây..." style="font-family: monospace; font-size: 13px; line-height: 1.5; resize: vertical; background: rgba(0, 0, 0, 0.3); border-color: rgba(34, 197, 94, 0.4);"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- FRACTIONAL LABEL CONFIGURATION MODAL (NHÃN PHÂN SỐ LÂM NGHIỆP & ĐỊA CHÍNH) -->
+    <div class="modal-overlay" id="fractional-label-modal-overlay">
+        <div class="modal-content" style="max-width: 660px;">
+            <button class="modal-close-btn" id="fractional-label-modal-close-btn">✕</button>
+            <div class="modal-header">
+                <span class="modal-badge" style="background: rgba(234, 179, 8, 0.2); border-color: #eab308; color: #fde047;">Quy Chuẩn Bản Đồ Lâm Nghiệp</span>
+                <h2 style="font-size: 18px; font-weight: 700; color: #fff; margin-top: 8px;">🏷️ Thiết Lập Hiển Thị Nhãn Phân Số Theo Lô</h2>
+                <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">
+                    Hiển thị thông tin thửa đất / lô rừng theo dạng phân số: <b>Tử số 2 trường</b> và <b>Mẫu số 2 trường</b>, có đường gạch ngang chia cách trực quan.
+                </p>
+            </div>
+
+            <!-- 1. LAYER SELECTION -->
+            <div class="form-group" style="margin-top: 14px;">
+                <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>📁 Chọn Lớp Bản Đồ Cần Cấu Hình Nhãn:</span>
+                    <span id="label-layer-feature-count" style="font-size: 11px; color: #38bdf8; font-weight: 600;"></span>
+                </label>
+                <select id="label-layer-select" class="filter-select">
+                    <!-- Populated dynamically -->
+                </select>
+            </div>
+
+            <!-- QUICK PRESET BUTTONS -->
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+                <button type="button" class="btn-header" id="btn-preset-forester" style="padding: 4px 10px; font-size: 11px; background: rgba(34, 197, 94, 0.15); border-color: #22c55e; color: #4ade80;" title="Tử: Lô - Khoảnh | Mẫu: Loài cây - Diện tích">
+                    🌲 Mẫu Chuẩn Lâm Nghiệp (Lô-Khoảnh / Loài-DT)
+                </button>
+                <button type="button" class="btn-header" id="btn-preset-cadastral" style="padding: 4px 10px; font-size: 11px; background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; color: #7dd3fc;" title="Tử: Số thửa - Tờ BĐ | Mẫu: Chủ rừng - Diện tích">
+                    📜 Mẫu Chuẩn Địa Chính (Thửa-Tờ / Chủ-DT)
+                </button>
+                <button type="button" class="btn-header" id="btn-preset-simple" style="padding: 4px 10px; font-size: 11px; background: rgba(245, 158, 11, 0.15); border-color: #f59e0b; color: #fbbf24;" title="Tử: Lô - Tiểu khu | Mẫu: Diện tích">
+                    ⚡ Mẫu Rút Gọn (Lô-TK / DT)
+                </button>
+            </div>
+
+            <!-- 2. FRACTION BUILDER CONTAINER -->
+            <div class="fraction-builder-box" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+                
+                <!-- NUMERATOR SECTION -->
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-size: 12px; font-weight: 700; color: #fde047; display: flex; align-items: center; gap: 6px;">
+                            <span>⬆️</span>
+                            <span>TỬ SỐ (DÒNG TRÊN - 2 TRƯỜNG):</span>
+                        </span>
+                        <span style="font-size: 10px; color: #94a3b8;">Ví dụ: Lô - Khoảnh hoặc Số thửa - Tờ BĐ</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 2fr 1.2fr 2fr; gap: 8px; align-items: center;">
+                        <div>
+                            <label class="form-label" style="font-size: 10px; color: #cbd5e1; margin-bottom: 2px;">Trường 1 (Tử 1):</label>
+                            <select id="label-num-f1" class="filter-select" style="font-size: 12px;"></select>
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size: 10px; color: #cbd5e1; margin-bottom: 2px;">Dấu nối tử:</label>
+                            <select id="label-num-sep" class="filter-select" style="font-size: 12px; text-align: center;">
+                                <option value=" - " selected> - (Gạch nối)</option>
+                                <option value=" / "> / (Gạch chéo)</option>
+                                <option value=" . "> . (Chấm)</option>
+                                <option value=" : "> : (Hai chấm)</option>
+                                <option value=" "> (Khoảng trắng)</option>
+                                <option value="">(Không dấu nối)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size: 10px; color: #cbd5e1; margin-bottom: 2px;">Trường 2 (Tử 2):</label>
+                            <select id="label-num-f2" class="filter-select" style="font-size: 12px;"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FRACTION BAR DIVIDER -->
+                <div style="display: flex; align-items: center; gap: 12px; padding: 6px 0; border-top: 1px dashed rgba(255, 255, 255, 0.12); border-bottom: 1px dashed rgba(255, 255, 255, 0.12); margin-bottom: 10px;">
+                    <span style="font-size: 11px; font-weight: 600; color: #38bdf8; white-space: nowrap;">➖ Đường Gạch Phân Số:</span>
+                    <select id="label-bar-style" class="filter-select" style="font-size: 12px; flex: 1;">
+                        <option value="─────────" selected>───────── (Nét liền ngang chuẩn)</option>
+                        <option value="┈┈┈┈┈┈┈┈┈">┈┈┈┈┈┈┈┈┈ (Nét đốm đứt)</option>
+                        <option value="═════════">═════════ (Nét đôi)</option>
+                        <option value="">(Không kẻ gạch ngang - Chỉ xuống dòng)</option>
+                    </select>
+                </div>
+
+                <!-- DENOMINATOR SECTION -->
+                <div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-size: 12px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+                            <span>⬇️</span>
+                            <span>MẪU SỐ (DÒNG DƯỚI - 2 TRƯỜNG):</span>
+                        </span>
+                        <span style="font-size: 10px; color: #94a3b8;">Ví dụ: Loài cây - Diện tích (ha)</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 2fr 1.2fr 2fr; gap: 8px; align-items: center;">
+                        <div>
+                            <label class="form-label" style="font-size: 10px; color: #cbd5e1; margin-bottom: 2px;">Trường 1 (Mẫu 1):</label>
+                            <select id="label-den-f1" class="filter-select" style="font-size: 12px;"></select>
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size: 10px; color: #cbd5e1; margin-bottom: 2px;">Dấu nối mẫu:</label>
+                            <select id="label-den-sep" class="filter-select" style="font-size: 12px; text-align: center;">
+                                <option value=" - " selected> - (Gạch nối)</option>
+                                <option value=" / "> / (Gạch chéo)</option>
+                                <option value=" . "> . (Chấm)</option>
+                                <option value=" : "> : (Hai chấm)</option>
+                                <option value=" "> (Khoảng trắng)</option>
+                                <option value="">(Không dấu nối)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size: 10px; color: #cbd5e1; margin-bottom: 2px;">Trường 2 (Mẫu 2):</label>
+                            <select id="label-den-f2" class="filter-select" style="font-size: 12px;"></select>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- LIVE PREVIEW BOX -->
+            <div class="fraction-preview-wrapper" style="margin-bottom: 14px;">
+                <div style="font-size: 11px; font-weight: 600; color: #cbd5e1; margin-bottom: 4px; display: flex; justify-content: space-between;">
+                    <span>👁️ Hình thức hiển thị thực tế trên bản đồ:</span>
+                    <span id="label-preview-sample-info" style="color: #94a3b8; font-size: 10px;">(Dữ liệu mẫu từ thửa đầu tiên)</span>
+                </div>
+                <div class="fraction-preview-card" id="label-preview-card" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 16px; text-align: center; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);">
+                    <div id="preview-numerator" style="font-family: 'Open Sans', 'Arial Unicode MS', sans-serif; font-size: 13px; font-weight: 700; color: #fde047; text-shadow: 0 0 2px #000, 1px 1px 2px #000, -1px -1px 2px #000; line-height: 1.2;">
+                        81 - 6
+                    </div>
+                    <div id="preview-divider" style="font-family: monospace; font-size: 13px; font-weight: 700; color: #fde047; text-shadow: 0 0 2px #000, 1px 1px 2px #000; letter-spacing: -1px; line-height: 1.1; margin: 2px 0;">
+                        ─────────
+                    </div>
+                    <div id="preview-denominator" style="font-family: 'Open Sans', 'Arial Unicode MS', sans-serif; font-size: 13px; font-weight: 700; color: #fde047; text-shadow: 0 0 2px #000, 1px 1px 2px #000, -1px -1px 2px #000; line-height: 1.2;">
+                        Keo - 0.22
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. STYLING OPTIONS -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <div>
+                    <label class="form-label" style="font-size: 11px;">Cỡ chữ:</label>
+                    <select id="label-font-size" class="filter-select" style="font-size: 11px;">
+                        <option value="10">10px (Nhỏ gọn)</option>
+                        <option value="11" selected>11px (Chuẩn)</option>
+                        <option value="12">12px (Vừa)</option>
+                        <option value="13">13px (Rõ nét)</option>
+                        <option value="14">14px (Lớn)</option>
+                        <option value="16">16px (Rất lớn)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size: 11px;">Màu chữ:</label>
+                    <select id="label-text-color" class="filter-select" style="font-size: 11px;">
+                        <option value="#fde047" selected>🟡 Vàng chanh</option>
+                        <option value="#ffffff">⚪ Trắng sáng</option>
+                        <option value="#38bdf8">🔵 Xanh Cyan</option>
+                        <option value="#fbbf24">🟠 Cam hổ phách</option>
+                        <option value="#4ade80">🟢 Xanh lục neon</option>
+                        <option value="#f87171">🔴 Đỏ tươi</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size: 11px;">Viền chữ (Halo):</label>
+                    <select id="label-halo-style" class="filter-select" style="font-size: 11px;">
+                        <option value="black-thick" selected>Viền đen đậm (2px)</option>
+                        <option value="black-medium">Viền đen vừa (1.5px)</option>
+                        <option value="white-thick">Viền trắng (2px)</option>
+                        <option value="none">Không có viền</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size: 11px;">Mức Zoom hiện:</label>
+                    <select id="label-min-zoom" class="filter-select" style="font-size: 11px;">
+                        <option value="11">Zoom 11+ (Cấp xã)</option>
+                        <option value="12">Zoom 12+ (Toàn xã)</option>
+                        <option value="13" selected>Zoom 13+ (Khuyến nghị)</option>
+                        <option value="14">Zoom 14+ (Cụm lô)</option>
+                        <option value="15">Zoom 15+ (Chi tiết lô)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ACTIONS -->
+            <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn-primary" id="btn-apply-fractional-label" style="flex: 2; padding: 10px 14px; font-weight: 700; background: linear-gradient(135deg, #10b981, #059669);">
+                    ✅ Áp Dụng Lên Bản Đồ
+                </button>
+                <button type="button" class="btn-header" id="btn-apply-all-layers-label" style="flex: 2; padding: 10px 14px; font-weight: 700; background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; color: #7dd3fc;" title="Áp dụng cùng quy cách nhãn phân số này cho tất cả các lớp vector">
+                    🌐 Áp Dụng Cho Tất Cả Các Lớp
+                </button>
+                <button type="button" class="btn-header" id="btn-disable-fractional-label" style="flex: 1; padding: 10px 14px; background: rgba(239, 68, 68, 0.15); border-color: #ef4444; color: #fca5a5;">
+                    ❌ Tắt Nhãn
+                </button>
+            </div>
+            <div id="fractional-label-status" style="display: none; margin-top: 10px; font-size: 12px; text-align: center;"></div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/vn_gis_tools.js?v=20261013_v10"></script>
+    <script src="js/gis_editor.js?v=20261013_v10"></script>
+    <script src="js/map_controller.js?v=20261013_v10"></script>
+    <script src="js/shape_matcher_ui.js?v=20261013_v10"></script>
+    <script src="js/field_survey.js?v=20261013_v10"></script>
+    <script src="js/user_workspace.js?v=20261013_v10"></script>
+    <script src="js/app.js?v=20261013_v10"></script>
+</body>
+</html>
