@@ -28,9 +28,9 @@ Server phục vụ giao diện tại `/` và API tại `/api/`. `/api/health` c�
 
 ## Đưa lên Plesk
 
-Máy chủ người dùng cung cấp: **15.235.180.82**, Plesk, chưa có tên miền; hiện chỉ xác nhận quyền quản trị Plesk, chưa có kết nối quản trị máy chủ từ môi trường này. Xem [DEPLOY_PLESK.md](docs/DEPLOY_PLESK.md).
+Máy chủ người dùng cung cấp: **15.235.180.82**, Plesk, chưa có tên miền; hosting **không hỗ trợ Docker** và người dùng chỉ có quyền quản trị Plesk. Cách triển khai phù hợp là nhờ nhà cung cấp chạy Python 3.12/Uvicorn dưới dịch vụ systemd và cấu hình nginx của Plesk. Xem [hướng dẫn không dùng Docker và mẫu yêu cầu nhà cung cấp](docs/DEPLOY_NO_DOCKER.md). Chưa có kết nối quản trị máy chủ từ môi trường này; mã nguồn và hướng dẫn không xác nhận website đã online.
 
-Docker chạy một FastAPI và giữ `data/`, `scratch/` qua volume. Plesk/nginx chuyển tiếp đến cổng nội bộ `127.0.0.1:8000`. Luồng SQLite hiện tại không cần PostGIS.
+Backend chỉ nghe trên `127.0.0.1:8000`, Plesk/nginx phục vụ giao diện và API qua HTTPS. Dữ liệu lưu trong `data/`, `scratch/` ngoài document root; luồng SQLite hiện tại không cần PostGIS. Mục Python/Passenger của Plesk dùng WSGI không trực tiếp chạy FastAPI ASGI. [Hướng dẫn Docker](docs/DEPLOY_PLESK.md) chỉ áp dụng cho máy chủ khác có hỗ trợ container.
 
 GitHub lưu nguồn có thể công khai. **GitHub Pages không chạy được backend Python**, nên cấu hình Pages của bản mẫu đã được thay bằng CI Python và cấu hình container. URL Pages cũ không phải nơi chạy đầy đủ hệ thống Phú Tài.
 

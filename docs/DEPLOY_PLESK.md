@@ -1,10 +1,12 @@
 # Triển khai WebGIS Phú Tài trên VPS Plesk
 
-Ứng dụng FastAPI + MapLibre từ gói Phú Tài chạy bằng một container Python, phục vụ cả API và giao diện. Dữ liệu hiện dùng SQLite và các tệp GIS trong `data/`; không cần PostGIS để chạy các chức năng hiện có. GitHub Pages không chạy được API Python.
+Hosting hiện tại **không hỗ trợ Docker**. Dùng [DEPLOY_NO_DOCKER.md](DEPLOY_NO_DOCKER.md): nhà cung cấp chạy Python 3.12/Uvicorn bằng systemd và cấu hình nginx Plesk. Tài liệu đó có mẫu yêu cầu hỗ trợ cho người dùng chỉ có quyền quản trị Plesk.
+
+Phần còn lại của tài liệu này là phương án thay thế **chỉ dành cho máy chủ có Docker**. Container phục vụ cả API FastAPI và giao diện MapLibre. Dữ liệu dùng SQLite và các tệp GIS trong `data/`; không cần PostGIS để chạy các chức năng hiện có. GitHub Pages không chạy được API Python.
 
 IP người dùng cung cấp: `15.235.180.82`. Người dùng có quyền quản trị Plesk, chưa có SSH/root và chưa có domain. Tài liệu này chuẩn bị các bước triển khai, **không xác nhận đã cài đặt ứng dụng trên VPS**. Không gửi mật khẩu/private key/API key trong chat; cấp quyền qua kênh quản lý truy cập an toàn của máy chủ.
 
-## Cách chính: chỉ dùng giao diện Plesk
+## Phương án Docker: dùng giao diện Plesk khi máy chủ hỗ trợ
 
 1. Trong Plesk, kiểm tra Extensions → Docker. Quyền quản trị Plesk không tự bảo đảm có Docker: nhà cung cấp có thể chưa cài extension hoặc không cho chạy container. Nếu thiếu, nhờ nhà cung cấp cài Docker extension/chạy container WebGIS; không cần đưa mật khẩu cho người hỗ trợ qua chat.
 2. Trên GitHub, workflow **Publish WebGIS container** chạy kiểm thử Python trước rồi mới build/push image Linux amd64 `ghcr.io/dung1412/gis:latest` khi cập nhật `main` hoặc chạy thủ công. Địa chỉ này là đích cấu hình, **chỉ dùng được sau lần chạy thành công**; kiểm tra VPS dùng kiến trúc amd64. Sau lần xuất bản đầu tiên, vào Packages → `gis` → Package settings → Change visibility → Public nếu GitHub tạo package private. Khi package public, Plesk có thể pull mà không cần token cá nhân.
